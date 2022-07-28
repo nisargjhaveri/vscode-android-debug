@@ -10,14 +10,62 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:android-debug.helloWorld"
+		"onCommand:android-debug.pickTarget",
+		"onDebugResolve:lldb"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
+		"configuration": {
+			"title": "Android Debug",
+			"properties": {
+				"android-debug.sdkRoot": {
+					"type": "string",
+					"description": "sdk root"
+				},
+				"android-debug.lldbServerRoot": {
+					"type": "string",
+					"description": "Location for prebuilt Android lldb-server"
+				}
+			}
+		},
 		"commands": [
 			{
-				"command": "android-debug.helloWorld",
-				"title": "Hello World"
+				"command": "android-debug.pickTarget",
+				"title": "Select Android Target"
+			}
+		],
+		"debuggers": [
+			{
+				"type": "lldb",
+				"configurationAttributes": {
+					"attach": {
+						"properties": {
+							"androidTarget": {
+								"description": "Target Android. Specify target serial number or `select` to select target.",
+								"anyOf": [
+									{
+										"type": "string"
+									},
+									{
+										"enum": [
+											false,
+											"select",
+											"last-selected"
+										]
+									}
+								]
+							},
+							"androidPackageName": {
+								"description": "Package name of the app to debug",
+								"type": "string"
+							},
+							"symbolSearchPaths": {
+								"description": "List of paths to where your unstripped so files are located",
+								"type": "array"
+							}
+						}
+					}
+				}
 			}
 		]
 	},
@@ -30,16 +78,20 @@
 		"test": "node ./out/test/runTest.js"
 	},
 	"devDependencies": {
-		"@types/vscode": "^1.69.0",
+		"@types/appium-adb": "^9.4.0",
 		"@types/glob": "^7.2.0",
 		"@types/mocha": "^9.1.1",
 		"@types/node": "16.x",
+		"@types/vscode": "^1.69.0",
 		"@typescript-eslint/eslint-plugin": "^5.30.0",
 		"@typescript-eslint/parser": "^5.30.0",
+		"@vscode/test-electron": "^2.1.5",
 		"eslint": "^8.18.0",
 		"glob": "^8.0.3",
 		"mocha": "^10.0.0",
-		"typescript": "^4.7.4",
-		"@vscode/test-electron": "^2.1.5"
+		"typescript": "^4.7.4"
+	},
+	"dependencies": {
+		"appium-adb": "^9.10.1"
 	}
 }

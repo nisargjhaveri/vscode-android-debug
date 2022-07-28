@@ -2,24 +2,28 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 
+import * as logger from './logger';
+import * as targetPicker from './targetPicker';
+import * as targetCommand from './targetCommand';
+import * as debugConfigProvider from './debugConfigProvider';
+import * as adb from './adb';
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-	
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "android-debug" is now active!');
+	logger.activate();
+	logger.log('Activating extension "android-debug"');
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('android-debug.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from Android Debug!');
-	});
+	targetPicker.activate(context);
+	targetCommand.activate(context);
 
-	context.subscriptions.push(disposable);
+	let sdkRoot: string|undefined = vscode.workspace.getConfiguration().get("android-debug.sdkRoot");
+	let lldbServerRoot: string|undefined = vscode.workspace.getConfiguration().get("android-debug.lldbServerRoot");
+	adb.activate(sdkRoot, lldbServerRoot);
+
+	context.subscriptions.push(vscode.commands.registerCommand('android-debug.pickTarget', targetPicker.pickTarget));
+
+	context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('lldb', new debugConfigProvider.DebugConfigurationProvider()));
 }
 
 // this method is called when your extension is deactivated
