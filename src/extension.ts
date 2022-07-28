@@ -6,6 +6,7 @@ import * as logger from './logger';
 import * as targetPicker from './targetPicker';
 import * as targetCommand from './targetCommand';
 import * as debugConfigProvider from './debugConfigProvider';
+import * as debugLifecycleManager from './debugLifecycleManager';
 import * as adb from './adb';
 
 // this method is called when your extension is activated
@@ -16,6 +17,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	targetPicker.activate(context);
 	targetCommand.activate(context);
+	debugLifecycleManager.activate(context);
 
 	let sdkRoot: string|undefined = vscode.workspace.getConfiguration().get("android-debug.sdkRoot");
 	let lldbServerRoot: string|undefined = vscode.workspace.getConfiguration().get("android-debug.lldbServerRoot");

@@ -54,6 +54,9 @@ export class DebugConfigurationProvider implements vscode.DebugConfigurationProv
             device: target, 
             packageName: dbgConfig.androidPackageName
         });
+        if (!socket) { return null; }
+
+        dbgConfig.androidLldbServerSocket = socket;
 
         // dbgConfig.pid = pid;
         dbgConfig.initCommands = (dbgConfig.initCommands instanceof Array) ? dbgConfig.initCommands : [];
