@@ -9,78 +9,78 @@ let lldbProcessKillers: {[socket: string]: () => void} = {};
 
 async function resolveArgs(args: any)
 {
-	if (!args.device)
-	{
-		args.device = await getOrPickTarget();
-	}
+    if (!args.device)
+    {
+        args.device = await getOrPickTarget();
+    }
 
-	return args;
+    return args;
 }
 
 export async function pickAndroidProcess(args: {device: Device}) {
-	let {device} = await resolveArgs(args);
+    let {device} = await resolveArgs(args);
 
-	let processList = android.getProcessList(device);
+    let processList = android.getProcessList(device);
 
-	let quickPickProcesses = processList.then((processList): (vscode.QuickPickItem & {pid:string})[] => {
-		return processList.map(p => ({
-			label: p.name,
-			description: p.pid,
-			pid: p.pid
-		}));
-	});
+    let quickPickProcesses = processList.then((processList): (vscode.QuickPickItem & {pid:string})[] => {
+        return processList.map(p => ({
+            label: p.name,
+            description: p.pid,
+            pid: p.pid
+        }));
+    });
 
-	return (await vscode.window.showQuickPick(quickPickProcesses, {title: "Pick Android Process", matchOnDescription: true}))?.pid;
+    return (await vscode.window.showQuickPick(quickPickProcesses, {title: "Pick Android Process", matchOnDescription: true}))?.pid;
 }
 
 export async function lldbServer(args: {device: Device, packageName: string})
 {
-	let {device, packageName} = args;
+    let {device, packageName} = args;
 
-	return vscode.window.withProgress({
-		"location": vscode.ProgressLocation.Notification,
-		"title": "Starting LLDB server",
-		"cancellable": true
-	}, (progress, token) => {
-		let cancellationToken = {cancel: () => {}};
+    return vscode.window.withProgress({
+        "location": vscode.ProgressLocation.Notification,
+        "title": "Starting LLDB server",
+        "cancellable": true
+    }, (progress, token) => {
+        let cancellationToken = {cancel: () => {}};
 
-		token.onCancellationRequested((e) => cancellationToken.cancel());
+        token.onCancellationRequested((e) => cancellationToken.cancel());
 
-		return Promise.resolve()
-			.then(() => android.startLldbServer(device, packageName))
-			.then(({socket, stop}) => {
+        return Promise.resolve()
+            .then(() => android.startLldbServer(device, packageName))
+            .then(({socket, stop}) => {
 
-				lldbProcessKillers[socket] = stop;
+                lldbProcessKillers[socket] = stop;
 
-				return socket;
-			})
-			.catch((e) => {
-				vscode.window.showErrorMessage("Failed to start lldb server");
-			});
-	});
+                return socket;
+            })
+            .catch((e) => {
+                vscode.window.showErrorMessage("Failed to start lldb server");
+            });
+    });
 }
 
 export function lldbServerCleanup(socket: string) {
-	logger.log(`Cleaning up lldb server at socket ${socket}`);
+    logger.log(`Cleaning up lldb server at socket ${socket}`);
 
-	if (!(socket in lldbProcessKillers)) {
-		return;
-	}
+    if (!(socket in lldbProcessKillers)) {
+        return;
+    }
 
-	lldbProcessKillers[socket]();
+    lldbProcessKillers[socket]();
 
-	delete lldbProcessKillers[socket];
+    delete lldbProcessKillers[socket];
 }
 
 export function activate(c: vscode.ExtensionContext) {
-	context = c;
+    context = c;
 
-	// Clean all open debugserver processes
-	context.subscriptions.push({
-		dispose() {
-			for(const socket in lldbProcessKillers) {
-				lldbProcessKillers[socket]();
-			}
-		}
-	});
+    // Clean all open lldb-server processes
+    context.subscriptions.push({
+        dispose() {
+            for(const socket in lldbProcessKillers) {
+                lldbProcessKillers[socket]();
+            }
+        }
+    });
 }

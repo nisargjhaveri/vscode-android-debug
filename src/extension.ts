@@ -12,20 +12,20 @@ import * as adb from './adb';
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-	logger.activate();
-	logger.log('Activating extension "android-debug"');
+    logger.activate();
+    logger.log('Activating extension "android-debug"');
 
-	targetPicker.activate(context);
-	targetCommand.activate(context);
-	debugLifecycleManager.activate(context);
+    targetPicker.activate(context);
+    targetCommand.activate(context);
+    debugLifecycleManager.activate(context);
 
-	let sdkRoot: string|undefined = vscode.workspace.getConfiguration().get("android-debug.sdkRoot");
-	let lldbServerRoot: string|undefined = vscode.workspace.getConfiguration().get("android-debug.lldbServerRoot");
-	adb.activate(sdkRoot, lldbServerRoot);
+    let sdkRoot: string|undefined = vscode.workspace.getConfiguration().get("android-debug.sdkRoot");
+    let lldbServerRoot: string|undefined = vscode.workspace.getConfiguration().get("android-debug.lldbServerRoot");
+    adb.activate(sdkRoot, lldbServerRoot);
 
-	context.subscriptions.push(vscode.commands.registerCommand('android-debug.pickAndroidProcess', targetCommand.pickAndroidProcess));
+    context.subscriptions.push(vscode.commands.registerCommand('android-debug.pickAndroidProcess', targetCommand.pickAndroidProcess));
 
-	context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('lldb', new debugConfigProvider.DebugConfigurationProvider()));
+    context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('lldb', new debugConfigProvider.DebugConfigurationProvider()));
 }
 
 // this method is called when your extension is deactivated

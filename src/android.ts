@@ -109,12 +109,3 @@ export async function getProcessList(device: Device) {
 
     return processList;
 }
-
-// activate();
-// startLldbServer({udid: "emulator-5554", state: "device"}, "com.nisargjhaveri.aagateway").then(({socket, subprocess}) => {
-//     console.log(socket);
-//     subprocess.on('output', console.log);
-//     subprocess.join();
-//     // console.log("Stopping lldb-server");
-//     // subprocess.stop().then(() => console.log("Stopped"));
-// });
