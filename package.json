@@ -90,5 +90,8 @@
     },
     "dependencies": {
         "appium-adb": "^9.10.1"
-    }
+    },
+    "extensionDependencies": [
+        "vadimcn.vscode-lldb"
+    ]
 }
