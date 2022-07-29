@@ -2,14 +2,14 @@ import * as vscode from 'vscode';
 import * as logger from './logger';
 import { Target } from './commonTypes';
 import * as targetCommand from './targetCommand';
-import { pickTarget } from './targetPicker';
+import * as targetPicker from './targetPicker';
 
 
 export class DebugConfigurationProvider implements vscode.DebugConfigurationProvider
 {
     private async getTarget(iosTarget: string): Promise<Target|undefined> {
         if (iosTarget === "select") {
-            return await pickTarget();
+            return await targetPicker.pickTarget();
         }
         // else if (iosTarget === "last-selected") {
         //     return await _getOrPickTarget();
@@ -31,6 +31,8 @@ export class DebugConfigurationProvider implements vscode.DebugConfigurationProv
         let target: Target|undefined = await this.getTarget(dbgConfig.androidTarget);
         if (!target) { return null; }
 
+        targetPicker.setCurrentTarget(target);
+
         dbgConfig.androidTarget = target;
 
         dbgConfig.androidRequest = dbgConfig.request;
@@ -47,6 +49,8 @@ export class DebugConfigurationProvider implements vscode.DebugConfigurationProv
         // if (dbgConfig.sessionName) {
         //     dbgConfig.name = dbgConfig.sessionName;
         // }
+
+        targetPicker.resetCurrentTarget();
 
         let target: Target = dbgConfig.androidTarget;
 

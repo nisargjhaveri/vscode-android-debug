@@ -9,6 +9,8 @@ interface TargetQuickPickItem extends vscode.QuickPickItem {
     target: Target;
 }
 
+var currentTarget: Target|undefined;
+
 async function listTargets(): Promise<Target[]> {
     let adb = await getAdb();
 
@@ -60,8 +62,26 @@ export async function pickTarget()
     return target;
 }
 
+export async function getOrPickTarget() {
+    if (currentTarget) { return currentTarget; }
+
+    return await pickTarget();
+}
+
+export function setCurrentTarget(target: Target) {
+    currentTarget = target;
+}
+
+export function resetCurrentTarget() {
+    currentTarget = undefined;
+}
+
+export function getCurrentTarget() {
+    return currentTarget;
+}
+
 // Activation
 export function activate(c: vscode.ExtensionContext)
 {
-	context = c;
+    context = c;
 }

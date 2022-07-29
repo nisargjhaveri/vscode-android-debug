@@ -10,7 +10,7 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:android-debug.pickTarget",
+		"onCommand:android-debug.pickAndroidProcess",
 		"onDebugResolve:lldb"
 	],
 	"main": "./out/extension.js",
@@ -28,15 +28,12 @@
 				}
 			}
 		},
-		"commands": [
-			{
-				"command": "android-debug.pickTarget",
-				"title": "Select Android Target"
-			}
-		],
 		"debuggers": [
 			{
 				"type": "lldb",
+				"variables": {
+					"pickAndroidProcess": "android-debug.pickAndroidProcess"
+				},
 				"configurationAttributes": {
 					"attach": {
 						"properties": {

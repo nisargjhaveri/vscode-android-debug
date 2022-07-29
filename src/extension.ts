@@ -23,7 +23,7 @@ export function activate(context: vscode.ExtensionContext) {
 	let lldbServerRoot: string|undefined = vscode.workspace.getConfiguration().get("android-debug.lldbServerRoot");
 	adb.activate(sdkRoot, lldbServerRoot);
 
-	context.subscriptions.push(vscode.commands.registerCommand('android-debug.pickTarget', targetPicker.pickTarget));
+	context.subscriptions.push(vscode.commands.registerCommand('android-debug.pickAndroidProcess', targetCommand.pickAndroidProcess));
 
 	context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('lldb', new debugConfigProvider.DebugConfigurationProvider()));
 }

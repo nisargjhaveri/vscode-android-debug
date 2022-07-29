@@ -2,9 +2,36 @@ import * as vscode from 'vscode';
 import * as logger from './logger';
 import * as android from './android';
 import { Device } from './commonTypes';
+import { getOrPickTarget } from './targetPicker';
 
 let context: vscode.ExtensionContext;
 let lldbProcessKillers: {[socket: string]: () => void} = {};
+
+async function resolveArgs(args: any)
+{
+	if (!args.device)
+	{
+		args.device = await getOrPickTarget();
+	}
+
+	return args;
+}
+
+export async function pickAndroidProcess(args: {device: Device}) {
+	let {device} = await resolveArgs(args);
+
+	let processList = android.getProcessList(device);
+
+	let quickPickProcesses = processList.then((processList): (vscode.QuickPickItem & {pid:string})[] => {
+		return processList.map(p => ({
+			label: p.name,
+			description: p.pid,
+			pid: p.pid
+		}));
+	});
+
+	return (await vscode.window.showQuickPick(quickPickProcesses, {title: "Pick Android Process", matchOnDescription: true}))?.pid;
+}
 
 export async function lldbServer(args: {device: Device, packageName: string})
 {

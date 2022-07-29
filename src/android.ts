@@ -84,6 +84,32 @@ export async function startLldbServer(device: Device, packageName: string) {
     };
 }
 
+export async function getProcessList(device: Device) {
+    let deviceAdb = await getDeviceAdb(device);
+
+    let subprocess = deviceAdb.createSubProcess(['jdwp']);
+    subprocess.start();
+
+    let processList: {pid: string, name: string}[] = [];
+    subprocess.on('lines-stdout', async (lines) => {
+        let processes = await Promise.all(lines.map(async (pid: string) => ({
+            pid,
+            name: await deviceAdb.getNameByPid(pid)
+        })));
+
+        processList.push(...processes);
+    });
+
+    // Wait for two seconds
+    await new Promise((resolve, reject) => setTimeout(resolve, 2000));
+
+    await subprocess.stop();
+
+    logger.log("getProcessList", processList);
+
+    return processList;
+}
+
 // activate();
 // startLldbServer({udid: "emulator-5554", state: "device"}, "com.nisargjhaveri.aagateway").then(({socket, subprocess}) => {
 //     console.log(socket);
