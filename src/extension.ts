@@ -7,7 +7,7 @@ import * as targetPicker from './targetPicker';
 import * as targetCommand from './targetCommand';
 import * as debugConfigProvider from './debugConfigProvider';
 import * as debugLifecycleManager from './debugLifecycleManager';
-import * as adb from './adb';
+import * as android from './android';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -20,8 +20,8 @@ export function activate(context: vscode.ExtensionContext) {
     debugLifecycleManager.activate(context);
 
     let sdkRoot: string|undefined = vscode.workspace.getConfiguration().get("android-debug.sdkRoot");
-    let lldbServerRoot: string|undefined = vscode.workspace.getConfiguration().get("android-debug.lldbServerRoot");
-    adb.activate(sdkRoot, lldbServerRoot);
+    let ndkRoot: string|undefined = vscode.workspace.getConfiguration().get("android-debug.ndkRoot");
+    android.activate(sdkRoot, ndkRoot);
 
     context.subscriptions.push(vscode.commands.registerCommand('android-debug.pickAndroidProcess', targetCommand.pickAndroidProcess));
 

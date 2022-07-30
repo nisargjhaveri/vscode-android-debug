@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as logger from './logger';
 import { TargetType, Target } from './commonTypes';
-import { getAdb, getDeviceAdb } from './adb';
+import { getAdb, getDeviceAdb } from './android';
 
 let context: vscode.ExtensionContext;
 

@@ -1,25 +1,60 @@
-import * as logger from './logger';
-import * as crypto from 'crypto';
-import { ADB, Device } from './commonTypes';
-import { getDeviceAdb, getLldbServerRoot } from './adb';
+import * as os from 'os';
+import * as path from 'path';
 import * as fs from 'fs';
 import * as fsPromises from 'fs/promises';
-import path = require('path');
 
-function randomString() {
-    let random;
+import * as logger from './logger';
+import * as utils from './utils';
+import { ADB, Device } from './commonTypes';
 
-    try {
-        random = crypto.randomBytes(16);
-    } catch (e) {
-        random = crypto.pseudoRandomBytes(16);
+let sdkRoot: string;
+let ndkRoot: string;
+
+let adb: ADB;
+
+export async function getAdb() {
+    if (!adb) {
+        adb = await ADB.createADB({sdkRoot});
     }
 
-    return random.toString('hex');
+    return adb;
+}
+
+export async function getDeviceAdb(device: Device) {
+    let deviceAdb = (await getAdb()).clone();
+    deviceAdb.setDevice(device);
+
+    return deviceAdb;
+}
+
+export async function getLldbServer(abi: string): Promise<string> {
+    try {
+        let platform = os.platform();
+
+        let llvmHostName = (platform === "win32") ? "windows-x86_64" : (platform === "darwin") ? "darwin-x86_64" : "linux-x86_64";
+        let llvmArch = abi.startsWith("armeabi") ? "arm" : (abi === "arm64-v8a") ? "aarch64": (abi === "x86") ? "i386" : "x86_64";
+
+        let llvmToolchainDir = path.normalize(`${ndkRoot}/toolchains/llvm/prebuilt/${llvmHostName}`);
+
+        let lldvPackageVersion = (await fsPromises.readFile(path.join(llvmToolchainDir, "AndroidVersion.txt"), "utf8")).split("\n")[0];
+
+        let lldbServerPath = path.normalize(`${llvmToolchainDir}/lib64/clang/${lldvPackageVersion}/lib/linux/${llvmArch}/lldb-server`);
+
+        await fsPromises.access(lldbServerPath, fs.constants.R_OK);
+
+        return lldbServerPath;
+    }
+    catch {
+        throw new Error("Could not locate lldb-server for the device");
+    }
 }
 
 
-async function getAbiList(deviceAdb: ADB) {
+async function getDeviceAbi(deviceAdb: ADB) {
+    return await deviceAdb.getDeviceProperty("ro.product.cpu.abi");
+}
+
+async function getDeviceAbiList(deviceAdb: ADB) {
     let abi = await deviceAdb.getDeviceProperty("ro.product.cpu.abi");
     let abilist = (await deviceAdb.getDeviceProperty("ro.product.cpu.abilist")).split(",");
 
@@ -32,26 +67,8 @@ async function getAbiList(deviceAdb: ADB) {
 }
 
 async function getLLdbServerForDevice(deviceAdb: ADB) {
-    let abilist = await getAbiList(deviceAdb);
-    let lldbServerRoot = await getLldbServerRoot();
-
-    let lldbServerPath;
-    for (let abi of abilist) {
-        let lldbServerPossiblePath = path.join(lldbServerRoot, abi, "lldb-server");
-
-        try {
-            await fsPromises.access(lldbServerPossiblePath, fs.constants.R_OK);
-            lldbServerPath = lldbServerPossiblePath;
-            break;
-        }
-        catch (e) {
-            // Assume not avaialble
-        }
-    }
-    
-    if (!lldbServerPath) {
-        throw new Error("lldb-server not found for the device");
-    }
+    let abi = await getDeviceAbi(deviceAdb);
+    let lldbServerPath = await getLldbServer(abi);
 
     return lldbServerPath;
 }
@@ -68,7 +85,7 @@ export async function startLldbServer(device: Device, packageName: string) {
         await deviceAdb.shell(`cat /data/local/tmp/lldb-server | run-as ${packageName} sh -c 'cat > /data/data/${packageName}/android-debug/lldb/bin/lldb-server && chmod 700 /data/data/${packageName}/android-debug/lldb/bin/lldb-server'`);
     } catch {}
 
-    let socket = `/${packageName}/platform-${randomString()}.sock`;
+    let socket = `/${packageName}/platform-${utils.randomString(16)}.sock`;
     let subprocess = deviceAdb.createSubProcess(['shell', `run-as ${packageName} /data/data/${packageName}/android-debug/lldb/bin/lldb-server platform --listen unix-abstract://${socket}`]);
     subprocess.start();
 
@@ -108,4 +125,9 @@ export async function getProcessList(device: Device) {
     logger.log("getProcessList", processList);
 
     return processList;
+}
+
+export async function activate(_sdkRoot?: string, _ndkRoot?: string) {
+    sdkRoot = _sdkRoot ?? "";
+    ndkRoot = _ndkRoot ?? "";
 }

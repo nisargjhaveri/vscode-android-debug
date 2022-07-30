@@ -22,9 +22,9 @@
                     "type": "string",
                     "description": "sdk root"
                 },
-                "android-debug.lldbServerRoot": {
+                "android-debug.ndkRoot": {
                     "type": "string",
-                    "description": "Location for prebuilt Android lldb-server"
+                    "description": "ndk root"
                 }
             }
         },
