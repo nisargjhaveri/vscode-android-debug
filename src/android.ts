@@ -12,6 +12,8 @@ let ndkRoot: string;
 
 let adb: ADB;
 
+const defaultAppAbis = ["armeabi-v7a", "arm64-v8a", "x86", "x86_64"];
+
 export async function getAdb() {
     if (!adb) {
         adb = await ADB.createADB({sdkRoot});
@@ -27,7 +29,7 @@ export async function getDeviceAdb(device: Device) {
     return deviceAdb;
 }
 
-export async function getLldbServer(abi: string): Promise<string> {
+async function getLldbServer(abi: string): Promise<string> {
     try {
         let platform = os.platform();
 
@@ -49,33 +51,55 @@ export async function getLldbServer(abi: string): Promise<string> {
     }
 }
 
-
-async function getDeviceAbi(deviceAdb: ADB) {
-    return await deviceAdb.getDeviceProperty("ro.product.cpu.abi");
-}
-
 async function getDeviceAbiList(deviceAdb: ADB) {
-    let abi = await deviceAdb.getDeviceProperty("ro.product.cpu.abi");
-    let abilist = (await deviceAdb.getDeviceProperty("ro.product.cpu.abilist")).split(",");
+    let abilist = [];
 
-    abilist.unshift(abi);
+    abilist.push(...(await deviceAdb.getDeviceProperty("ro.product.cpu.abilist")).split(","));
+
+    if (!abilist.length) {
+        abilist.push(...[
+            await deviceAdb.getDeviceProperty("ro.product.cpu.abi"),
+            await deviceAdb.getDeviceProperty("ro.product.cpu.abi2")
+        ]);
+    }
+
     abilist.filter((item, pos, self) => {
-        return item && self.indexOf(item) === pos;
+        return item && item.length;
     });
 
     return abilist;
 }
 
-async function getLLdbServerForDevice(deviceAdb: ADB) {
-    let abi = await getDeviceAbi(deviceAdb);
+export async function getBestAbi(device: Device, appAbiList?: string[]) {
+    return await getBestAbiInternal(await getDeviceAdb(device), appAbiList);
+}
+
+async function getBestAbiInternal(deviceAdb:ADB, appAbiList?: string[]) {
+    let deviceAbiList = await getDeviceAbiList(deviceAdb);
+
+    appAbiList = appAbiList ?? defaultAppAbis;
+
+    for (let abi of deviceAbiList) {
+        if (appAbiList.indexOf(abi) >= 0) {
+            return abi;
+        }
+    }
+
+    throw new Error("Cannot find appropriate ABI to use");
+}
+
+async function getLLdbServerForDevice(deviceAdb: ADB, appAbiList?: string[]) {
+    let abi = await getBestAbiInternal(deviceAdb, appAbiList);
     let lldbServerPath = await getLldbServer(abi);
 
     return lldbServerPath;
 }
 
-export async function startLldbServer(device: Device, packageName: string) {
+export async function startLldbServer(device: Device, packageName: string, appAbiList?: string[]) {
     let deviceAdb = await getDeviceAdb(device);
-    let lldbServerPath = await getLLdbServerForDevice(deviceAdb);
+    let lldbServerPath = await getLLdbServerForDevice(deviceAdb, appAbiList);
+
+    logger.log(`Using lldb-server at ${lldbServerPath}`);
 
     await deviceAdb.push(lldbServerPath, "/data/local/tmp/android-debug/lldb-server");
     await deviceAdb.shell(`run-as ${packageName} mkdir -p /data/data/${packageName}/android-debug/lldb/bin/`);

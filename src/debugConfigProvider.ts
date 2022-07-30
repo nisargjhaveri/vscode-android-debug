@@ -31,12 +31,13 @@ export class DebugConfigurationProvider implements vscode.DebugConfigurationProv
         let target: Target|undefined = await this.getTarget(dbgConfig.androidTarget);
         if (!target) { return null; }
 
-        targetPicker.setCurrentTarget(target);
-
         dbgConfig.androidTarget = target;
 
         dbgConfig.androidRequest = dbgConfig.request;
         dbgConfig.request = "attach";
+
+        targetPicker.setCurrentTarget(target);
+        targetCommand.setCurrentDebugConfiguration(dbgConfig);
 
         return dbgConfig;
     }
@@ -51,18 +52,19 @@ export class DebugConfigurationProvider implements vscode.DebugConfigurationProv
         // }
 
         targetPicker.resetCurrentTarget();
+        targetCommand.resetCurrentDebugConfiguration();
 
         let target: Target = dbgConfig.androidTarget;
 
         let socket = await targetCommand.lldbServer({
             device: target, 
-            packageName: dbgConfig.androidPackageName
+            packageName: dbgConfig.androidPackageName,
+            appAbiList: dbgConfig.androidAppSupportedAbis
         });
         if (!socket) { return null; }
 
         dbgConfig.androidLldbServerSocket = socket;
 
-        // dbgConfig.pid = pid;
         dbgConfig.initCommands = (dbgConfig.initCommands instanceof Array) ? dbgConfig.initCommands : [];
         dbgConfig.initCommands.unshift(`platform connect unix-abstract-connect://[${target.udid}]${socket}`);
         dbgConfig.initCommands.unshift(`platform select remote-android`);

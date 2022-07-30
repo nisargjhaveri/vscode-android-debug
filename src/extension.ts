@@ -24,6 +24,7 @@ export function activate(context: vscode.ExtensionContext) {
     android.activate(sdkRoot, ndkRoot);
 
     context.subscriptions.push(vscode.commands.registerCommand('android-debug.pickAndroidProcess', targetCommand.pickAndroidProcess));
+    context.subscriptions.push(vscode.commands.registerCommand('android-debug.getBestAbi', targetCommand.getBestAbi));
 
     context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('lldb', new debugConfigProvider.DebugConfigurationProvider()));
 }

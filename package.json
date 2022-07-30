@@ -32,7 +32,8 @@
             {
                 "type": "lldb",
                 "variables": {
-                    "pickAndroidProcess": "android-debug.pickAndroidProcess"
+                    "pickAndroidProcess": "android-debug.pickAndroidProcess",
+                    "abi": "android-debug.getBestAbi"
                 },
                 "configurationAttributes": {
                     "attach": {
@@ -56,9 +57,20 @@
                                 "description": "Package name of the app to debug",
                                 "type": "string"
                             },
+                            "androidAppSupportedAbis": {
+                                "description": "List of ABIs supported by the app",
+                                "type": "array",
+                                "items": {
+                                    "enum": ["armeabi", "armeabi-v7a", "arm64-v8a", "x86", "x86_64"]
+                                },
+                                "default": ["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]
+                            },
                             "symbolSearchPaths": {
                                 "description": "List of paths to where your unstripped so files are located",
-                                "type": "array"
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
                             }
                         }
                     }
