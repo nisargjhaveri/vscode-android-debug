@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Attach Sample App",
+            "type": "lldb",
+            "request": "attach",
+            "pid": "${command:pickAndroidProcess}",
+            "androidPackageName": "com.example.sampleapplication",
+            "androidTarget": "select",
+            "symbolSearchPaths": [
+                "${workspaceFolder}/app/build/intermediates/cmake/debug/obj/${command:abi}/",
+            ],
+        },
+    ]
+}
