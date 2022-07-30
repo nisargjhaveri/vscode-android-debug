@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as logger from './logger';
 import * as android from './android';
 import { Device } from './commonTypes';
-import { getOrPickTarget } from './targetPicker';
+import { getCurrentOrPickTarget } from './targetPicker';
 
 let context: vscode.ExtensionContext;
 let lldbProcessKillers: {[socket: string]: () => void} = {};
@@ -13,7 +13,7 @@ async function resolveArgs(args: any)
 {
     if (!args.device)
     {
-        args.device = await getOrPickTarget();
+        args.device = await getCurrentOrPickTarget();
     }
 
     return args;

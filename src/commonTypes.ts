@@ -1,6 +1,6 @@
-import { ADB, Device, VerboseDevice } from 'appium-adb';
+import { Device, VerboseDevice } from 'appium-adb';
 
-export { ADB, Device };
+export { Device, VerboseDevice };
 
 export type TargetType = "Device" | "Emulator";
 

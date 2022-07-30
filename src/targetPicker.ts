@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as logger from './logger';
-import { TargetType, Target } from './commonTypes';
-import { getAdb, getDeviceAdb } from './android';
+import { TargetType, Target, VerboseDevice } from './commonTypes';
+import { getAdb, getDeviceAdb, getDeviceFromUDID, isDeviceConnected } from './android';
 
 let context: vscode.ExtensionContext;
 
@@ -9,23 +9,30 @@ interface TargetQuickPickItem extends vscode.QuickPickItem {
     target: Target;
 }
 
+// Last successfully picked target
+var lastPickedTarget: Target|undefined;
+
+// Current target for the debug session being started
 var currentTarget: Target|undefined;
+
+
+async function createTargetFromDevice(device: VerboseDevice): Promise<Target> {
+    let deviceAdb = await getDeviceAdb(device);
+
+    let type : TargetType = device.udid.startsWith("emulator-") ? "Emulator" : "Device";
+    let name = type === "Emulator" ? (await deviceAdb.sendTelnetCommand("avd name")).replace(/_/g, " ") : await deviceAdb.getModel();
+
+    return {
+        ...device,
+        type,
+        name,
+    };
+}
 
 async function listTargets(): Promise<Target[]> {
     let adb = await getAdb();
 
-    let devices = await Promise.all((await adb.getConnectedDevices({verbose: true})).map(async d => {
-        let deviceAdb = await getDeviceAdb(d);
-
-        let type : TargetType = d.udid.startsWith("emulator-") ? "Emulator" : "Device";
-        let name = type === "Emulator" ? (await deviceAdb.sendTelnetCommand("avd name")).replace(/_/g, " ") : await deviceAdb.getModel();
-
-        return {
-            ...d,
-            type,
-            name,
-        };
-    }));
+    let devices = await Promise.all((await adb.getConnectedDevices({verbose: true})).map(createTargetFromDevice));
 
     console.log(devices);
     return devices;
@@ -59,13 +66,34 @@ export async function pickTarget()
 
     logger.log("Picked target", target);
 
+    if (target) { lastPickedTarget = target; }
+
     return target;
 }
 
-export async function getOrPickTarget() {
+// Get the last picked target if still available or pick target.
+export async function getLastOrPickTarget() {
+    if (lastPickedTarget && await isDeviceConnected(lastPickedTarget.udid)) {
+        return lastPickedTarget;
+    }
+
+    return await pickTarget();
+}
+
+export async function getTargetFromUDID(udid: string) {
+    return await createTargetFromDevice(await getDeviceFromUDID(udid));
+}
+
+// Current target is only available when a new debug session is being started
+// between resolveDebugConfiguration and resolveDebugConfigurationWithSubstitutedVariables calls.
+export async function getCurrentOrPickTarget() {
     if (currentTarget) { return currentTarget; }
 
     return await pickTarget();
+}
+
+export function getCurrentTarget() {
+    return currentTarget;
 }
 
 export function setCurrentTarget(target: Target) {
@@ -76,9 +104,6 @@ export function resetCurrentTarget() {
     currentTarget = undefined;
 }
 
-export function getCurrentTarget() {
-    return currentTarget;
-}
 
 // Activation
 export function activate(c: vscode.ExtensionContext)

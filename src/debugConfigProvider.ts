@@ -7,16 +7,16 @@ import * as targetPicker from './targetPicker';
 
 export class DebugConfigurationProvider implements vscode.DebugConfigurationProvider
 {
-    private async getTarget(iosTarget: string): Promise<Target|undefined> {
-        if (iosTarget === "select") {
+    private async getTarget(androidTarget: string): Promise<Target|undefined> {
+        if (androidTarget === "select") {
             return await targetPicker.pickTarget();
         }
-        // else if (iosTarget === "last-selected") {
-        //     return await _getOrPickTarget();
-        // }
-        // else if (typeof iosTarget === "string") {
-        //     return await getTargetFromUDID(iosTarget);
-        // }
+        else if (androidTarget === "last-selected") {
+            return await targetPicker.getLastOrPickTarget();
+        }
+        else if (typeof androidTarget === "string") {
+            return await targetPicker.getTargetFromUDID(androidTarget);
+        }
         
         return undefined;
     }

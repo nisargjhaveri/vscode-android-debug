@@ -3,9 +3,10 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as fsPromises from 'fs/promises';
 
+import { ADB, Device, VerboseDevice } from 'appium-adb';
+
 import * as logger from './logger';
 import * as utils from './utils';
-import { ADB, Device } from './commonTypes';
 
 let sdkRoot: string;
 let ndkRoot: string;
@@ -27,6 +28,34 @@ export async function getDeviceAdb(device: Device) {
     deviceAdb.setDevice(device);
 
     return deviceAdb;
+}
+
+export async function getDeviceFromUDID(udid: string): Promise<VerboseDevice> {
+    let adb = await getAdb();
+
+    let devices = await adb.getConnectedDevices({verbose: true});
+
+    let device = devices.filter((d) => {
+        return d.udid === udid;
+    });
+
+    if (device.length > 0) {
+        return device[0];
+    }
+
+    throw new Error(`Could not find connected device with serial ${udid}`);
+}
+
+export async function isDeviceConnected(udid: string): Promise<boolean> {
+    let adb = await getAdb();
+
+    let devices = await adb.getConnectedDevices();
+
+    let found = devices.filter((d) => {
+        return d.state === "device" && d.udid === udid;
+    });
+
+    return found.length > 0;
 }
 
 async function getLldbServer(abi: string): Promise<string> {
