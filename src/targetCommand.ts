@@ -82,6 +82,21 @@ export async function getBestAbi(args: {device: Device}) {
     return await android.getBestAbi(device, appAbiList);
 }
 
+export async function getBestMappedAbi(args: {device: Device}) {
+    let {device} = await resolveArgs(args);
+
+    let appAbiList = currentDebugConfiguration && currentDebugConfiguration.androidAppSupportedAbis ? currentDebugConfiguration.androidAppSupportedAbis : undefined;
+    let abi = await android.getBestAbi(device, appAbiList);
+
+    let abiMap = currentDebugConfiguration && currentDebugConfiguration.androidAbiMap ? currentDebugConfiguration.androidAbiMap : {};
+
+    if (abi in abiMap) {
+        return abiMap[abi];
+    }
+
+    return abi;
+}
+
 export function setCurrentDebugConfiguration(dbgConfig: vscode.DebugConfiguration) {
     currentDebugConfiguration = dbgConfig;
 }

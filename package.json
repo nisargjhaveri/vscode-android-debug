@@ -33,7 +33,8 @@
                 "type": "lldb",
                 "variables": {
                     "pickAndroidProcess": "android-debug.pickAndroidProcess",
-                    "abi": "android-debug.getBestAbi"
+                    "abi": "android-debug.getBestAbi",
+                    "mappedAbi": "android-debug.getBestMappedAbi"
                 },
                 "configurationAttributes": {
                     "attach": {
@@ -64,6 +65,17 @@
                                     "enum": ["armeabi", "armeabi-v7a", "arm64-v8a", "x86", "x86_64"]
                                 },
                                 "default": ["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]
+                            },
+                            "androidAbiMap": {
+                                "description": "Map of android abi to custom string",
+                                "type": "object",
+                                "properties": {
+                                    "armeabi": {"type": "string"},
+                                    "armeabi-v7a": {"type": "string"},
+                                    "arm64-v8a": {"type": "string"},
+                                    "x86": {"type": "string"},
+                                    "x86_64": {"type": "string"}
+                                }
                             },
                             "symbolSearchPaths": {
                                 "description": "List of paths to where your unstripped so files are located",
