@@ -117,16 +117,15 @@ async function getBestAbiInternal(deviceAdb:ADB, appAbiList?: string[]) {
     throw new Error("Cannot find appropriate ABI to use");
 }
 
-async function getLLdbServerForDevice(deviceAdb: ADB, appAbiList?: string[]) {
-    let abi = await getBestAbiInternal(deviceAdb, appAbiList);
+async function getLLdbServerForDevice(abi: string) {
     let lldbServerPath = await getLldbServer(abi);
 
     return lldbServerPath;
 }
 
-export async function startLldbServer(device: Device, packageName: string, appAbiList?: string[]) {
+export async function startLldbServer(device: Device, packageName: string, abi: string) {
     let deviceAdb = await getDeviceAdb(device);
-    let lldbServerPath = await getLLdbServerForDevice(deviceAdb, appAbiList);
+    let lldbServerPath = await getLLdbServerForDevice(abi);
 
     logger.log(`Using lldb-server at ${lldbServerPath}`);
 

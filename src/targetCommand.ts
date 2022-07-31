@@ -9,6 +9,12 @@ let lldbProcessKillers: {[socket: string]: () => void} = {};
 
 let currentDebugConfiguration: vscode.DebugConfiguration|undefined;
 
+let lastPickedAbi: string|undefined;
+let currentBestAbi: string|undefined;
+let didResolveCurrentBestAbi = false;
+
+const allSupportedAbis = ["armeabi", "armeabi-v7a", "arm64-v8a", "x86", "x86_64"];
+
 async function resolveArgs(args: any)
 {
     if (!args.device)
@@ -35,9 +41,25 @@ export async function pickAndroidProcess(args: {device: Device}) {
     return (await vscode.window.showQuickPick(quickPickProcesses, {title: "Pick Android Process", matchOnDescription: true}))?.pid;
 }
 
-export async function lldbServer(args: {device: Device, packageName: string, appAbiList?: string[]})
+async function pickAppAbi(appSupportedAbiList?: string[]) {
+    appSupportedAbiList = appSupportedAbiList ?? allSupportedAbis;
+
+    appSupportedAbiList.sort((a, b) => {
+        if (a === lastPickedAbi) { return -1; }
+        if (b === lastPickedAbi) { return 1; }
+        return a.localeCompare(b);
+    });
+
+    let abi = await vscode.window.showQuickPick(appSupportedAbiList, {title: "Pick Android ABI", matchOnDescription: true});
+
+    if (abi) { lastPickedAbi = abi; }
+
+    return abi;
+}
+
+export async function lldbServer(args: {device: Device, packageName: string, abi: string})
 {
-    let {device, packageName, appAbiList} = args;
+    let {device, packageName, abi} = args;
 
     return vscode.window.withProgress({
         "location": vscode.ProgressLocation.Notification,
@@ -49,7 +71,7 @@ export async function lldbServer(args: {device: Device, packageName: string, app
         token.onCancellationRequested((e) => cancellationToken.cancel());
 
         return Promise.resolve()
-            .then(() => android.startLldbServer(device, packageName, appAbiList))
+            .then(() => android.startLldbServer(device, packageName, abi))
             .then(({socket, stop}) => {
 
                 lldbProcessKillers[socket] = stop;
@@ -74,23 +96,45 @@ export function lldbServerCleanup(socket: string) {
     delete lldbProcessKillers[socket];
 }
 
+async function getBestAbiInternal(device: Device) {
+    let appSupportedAbiList: string[]|undefined = currentDebugConfiguration?.androidAppSupportedAbis ?? undefined;
+    let appAbi: string = currentDebugConfiguration?.androidAppAbi ?? undefined;
+
+    if (appAbi && appAbi === "select") {
+        return await pickAppAbi(appSupportedAbiList);
+    }
+    else if (appAbi) {
+        return appAbi;
+    }
+    else {
+        return await android.getBestAbi(device, appSupportedAbiList);
+    }
+}
+
 export async function getBestAbi(args: {device: Device}) {
     let {device} = await resolveArgs(args);
 
-    let appAbiList = currentDebugConfiguration && currentDebugConfiguration.androidAppSupportedAbis ? currentDebugConfiguration.androidAppSupportedAbis : undefined;
+    if (!currentDebugConfiguration) {
+        return await getBestAbiInternal(device);
+    }
 
-    return await android.getBestAbi(device, appAbiList);
+    if (!didResolveCurrentBestAbi) {
+        currentBestAbi = await getBestAbiInternal(device);
+    }
+
+    didResolveCurrentBestAbi = true;
+
+    return currentBestAbi;
 }
 
 export async function getBestMappedAbi(args: {device: Device}) {
     let {device} = await resolveArgs(args);
 
-    let appAbiList = currentDebugConfiguration && currentDebugConfiguration.androidAppSupportedAbis ? currentDebugConfiguration.androidAppSupportedAbis : undefined;
-    let abi = await android.getBestAbi(device, appAbiList);
+    let abi = await getBestAbi(device);
 
     let abiMap = currentDebugConfiguration && currentDebugConfiguration.androidAbiMap ? currentDebugConfiguration.androidAbiMap : {};
 
-    if (abi in abiMap) {
+    if (abi && (abi in abiMap)) {
         return abiMap[abi];
     }
 
@@ -99,10 +143,14 @@ export async function getBestMappedAbi(args: {device: Device}) {
 
 export function setCurrentDebugConfiguration(dbgConfig: vscode.DebugConfiguration) {
     currentDebugConfiguration = dbgConfig;
+    currentBestAbi = undefined;
+    didResolveCurrentBestAbi = false;
 }
 
 export function resetCurrentDebugConfiguration() {
     currentDebugConfiguration = undefined;
+    currentBestAbi = undefined;
+    didResolveCurrentBestAbi = false;
 }
 
 export function activate(c: vscode.ExtensionContext) {

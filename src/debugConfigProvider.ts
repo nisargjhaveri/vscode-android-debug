@@ -47,19 +47,17 @@ export class DebugConfigurationProvider implements vscode.DebugConfigurationProv
 
         if (!dbgConfig.androidTarget) { return dbgConfig; }
 
-        // if (dbgConfig.sessionName) {
-        //     dbgConfig.name = dbgConfig.sessionName;
-        // }
+        let target: Target = dbgConfig.androidTarget;
+
+        dbgConfig.androidAppAbi = await targetCommand.getBestAbi({device: target});
 
         targetPicker.resetCurrentTarget();
         targetCommand.resetCurrentDebugConfiguration();
 
-        let target: Target = dbgConfig.androidTarget;
-
         let socket = await targetCommand.lldbServer({
             device: target, 
             packageName: dbgConfig.androidPackageName,
-            appAbiList: dbgConfig.androidAppSupportedAbis
+            abi: dbgConfig.androidAppAbi
         });
         if (!socket) { return null; }
 

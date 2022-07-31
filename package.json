@@ -66,6 +66,10 @@
                                 },
                                 "default": ["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]
                             },
+                            "androidAppAbi": {
+                                "description": "The ABI that is installed in case of split APKs.",
+                                "enum": ["select", "armeabi", "armeabi-v7a", "arm64-v8a", "x86", "x86_64"]
+                            },
                             "androidAbiMap": {
                                 "description": "Map of android abi to custom string",
                                 "type": "object",
