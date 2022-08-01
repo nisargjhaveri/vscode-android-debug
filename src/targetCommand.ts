@@ -44,13 +44,16 @@ export async function pickAndroidProcess(args: {device: Device}) {
 async function pickAppAbi(appSupportedAbiList?: string[]) {
     appSupportedAbiList = appSupportedAbiList ?? allSupportedAbis;
 
-    appSupportedAbiList.sort((a, b) => {
+    let abiOptions = appSupportedAbiList.sort((a, b) => {
         if (a === lastPickedAbi) { return -1; }
         if (b === lastPickedAbi) { return 1; }
         return a.localeCompare(b);
-    });
+    }).map((abi): vscode.QuickPickItem => ({
+        label: abi,
+        detail: getMappedAbi(abi)
+    }));
 
-    let abi = await vscode.window.showQuickPick(appSupportedAbiList, {title: "Pick Android ABI", matchOnDescription: true});
+    let abi = (await vscode.window.showQuickPick(abiOptions, {title: "Pick Android ABI", matchOnDescription: true}))?.label;
 
     if (abi) { lastPickedAbi = abi; }
 
@@ -127,18 +130,22 @@ export async function getBestAbi(args: {device: Device}) {
     return currentBestAbi;
 }
 
-export async function getBestMappedAbi(args: {device: Device}) {
-    let {device} = await resolveArgs(args);
-
-    let abi = await getBestAbi(device);
-
-    let abiMap = currentDebugConfiguration && currentDebugConfiguration.androidAbiMap ? currentDebugConfiguration.androidAbiMap : {};
+function getMappedAbi(abi?: string): string|undefined {
+    let abiMap = currentDebugConfiguration?.androidAbiMap ?? {};
 
     if (abi && (abi in abiMap)) {
         return abiMap[abi];
     }
 
-    return abi;
+    return undefined;
+}
+
+export async function getBestMappedAbi(args: {device: Device}) {
+    let {device} = await resolveArgs(args);
+
+    let abi = await getBestAbi(device);
+
+    return getMappedAbi(abi) ?? abi;
 }
 
 export function setCurrentDebugConfiguration(dbgConfig: vscode.DebugConfiguration) {
