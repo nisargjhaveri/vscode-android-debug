@@ -160,11 +160,15 @@ export async function getProcessList(device: Device) {
     subprocess.start();
 
     let processList: {pid: string, name: string}[] = [];
-    subprocess.on('lines-stdout', async (lines) => {
-        let processes = await Promise.all(lines.map(async (pid: string) => ({
-            pid,
-            name: await deviceAdb.getNameByPid(pid)
-        })));
+    subprocess.on('lines-stdout', async (lines: string[]) => {
+        let processes = await Promise.all(
+            lines
+                .map((l) => l.trim())
+                .map(async (pid: string) => ({
+                    pid: pid.trim(),
+                    name: await deviceAdb.getNameByPid(pid)
+                }))
+        );
 
         processList.push(...processes);
     });
