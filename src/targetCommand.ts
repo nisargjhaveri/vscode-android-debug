@@ -15,7 +15,7 @@ let didResolveCurrentBestAbi = false;
 
 const allSupportedAbis = ["armeabi", "armeabi-v7a", "arm64-v8a", "x86", "x86_64"];
 
-async function resolveArgs(args: any)
+async function resolveArgs<T extends {device?: Device}>(args: T): Promise<T>
 {
     if (!args.device)
     {
@@ -143,9 +143,19 @@ function getMappedAbi(abi?: string): string|undefined {
 export async function getBestMappedAbi(args: {device: Device}) {
     let {device} = await resolveArgs(args);
 
-    let abi = await getBestAbi(device);
+    let abi = await getBestAbi({device});
 
     return getMappedAbi(abi) ?? abi;
+}
+
+export async function forwardJdwpPort(args: {device: Device, pid: string}) {
+    let {device, pid} = await resolveArgs(args);
+
+    return await android.forwardJdwpPort(device, pid);
+}
+
+export async function removeTcpForward(device: Device, port: string) {
+    return await android.removeTcpForward(device, port);
 }
 
 export function setCurrentDebugConfiguration(dbgConfig: vscode.DebugConfiguration) {

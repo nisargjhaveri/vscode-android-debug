@@ -13,7 +13,8 @@
     ],
     "activationEvents": [
         "onCommand:android-debug.pickAndroidProcess",
-        "onDebugResolve:lldb"
+        "onDebugResolve:lldb",
+        "onDebugResolve:java"
     ],
     "main": "./out/extension.js",
     "contributes": {
@@ -117,6 +118,33 @@
                                 "items": {
                                     "type": "string"
                                 }
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "type": "java",
+                "variables": {
+                    "pickAndroidProcess": "android-debug.pickAndroidProcess"
+                },
+                "configurationAttributes": {
+                    "attach": {
+                        "properties": {
+                            "androidTarget": {
+                                "description": "Target Android. Specify target serial number or `select` to select target.",
+                                "anyOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "enum": [
+                                            false,
+                                            "select",
+                                            "last-selected"
+                                        ]
+                                    }
+                                ]
                             }
                         }
                     }

@@ -183,6 +183,16 @@ export async function getProcessList(device: Device) {
     return processList;
 }
 
+export async function forwardJdwpPort(device: Device, pid: string) {
+    let deviceAdb = await getDeviceAdb(device);
+    return await deviceAdb.adbExec(["forward", `tcp:0`, `jdwp:${pid}`]);
+}
+
+export async function removeTcpForward(device: Device, port: string) {
+    let deviceAdb = await getDeviceAdb(device);
+    return await deviceAdb.removePortForward(port);
+}
+
 export async function activate(_sdkRoot?: string, _ndkRoot?: string) {
     sdkRoot = _sdkRoot ?? "";
     ndkRoot = _ndkRoot ?? "";
