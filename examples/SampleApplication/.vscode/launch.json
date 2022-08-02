@@ -12,5 +12,13 @@
                 "${workspaceFolder}/app/build/intermediates/cmake/debug/obj/${command:abi}/",
             ],
         },
+        {
+            "name": "Java Attach",
+            "type": "java",
+            "request": "attach",
+            "processId": "${command:pickAndroidProcess}",
+            "androidTarget": "select",
+            "sourcePaths": ["${workspaceFolder}/app/src/main/java"]
+        }
     ]
 }
