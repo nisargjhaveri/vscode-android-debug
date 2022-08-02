@@ -8,16 +8,21 @@ import { ADB, Device, VerboseDevice } from 'appium-adb';
 import * as logger from './logger';
 import * as utils from './utils';
 
-let sdkRoot: string;
-let ndkRoot: string;
+import * as androidPaths from './androidPaths';
 
 let adb: ADB;
+let forceRecreateAdb = false;
 
 const defaultAppAbis = ["armeabi-v7a", "arm64-v8a", "x86", "x86_64"];
 
+export async function handlePathsUpdated() {
+    forceRecreateAdb = true;
+}
+
 export async function getAdb() {
-    if (!adb) {
-        adb = await ADB.createADB({sdkRoot});
+    if (!adb || forceRecreateAdb) {
+        adb = await ADB.createADB({sdkRoot: androidPaths.requireSdkRoot()});
+        forceRecreateAdb = false;
     }
 
     return adb;
@@ -65,7 +70,7 @@ async function getLldbServer(abi: string): Promise<string> {
         let llvmHostName = (platform === "win32") ? "windows-x86_64" : (platform === "darwin") ? "darwin-x86_64" : "linux-x86_64";
         let llvmArch = abi.startsWith("armeabi") ? "arm" : (abi === "arm64-v8a") ? "aarch64": (abi === "x86") ? "i386" : "x86_64";
 
-        let llvmToolchainDir = path.normalize(`${ndkRoot}/toolchains/llvm/prebuilt/${llvmHostName}`);
+        let llvmToolchainDir = path.normalize(`${androidPaths.requireNdkRoot()}/toolchains/llvm/prebuilt/${llvmHostName}`);
 
         let lldvPackageVersion = (await fsPromises.readFile(path.join(llvmToolchainDir, "AndroidVersion.txt"), "utf8")).split("\n")[0];
 
@@ -191,9 +196,4 @@ export async function forwardJdwpPort(device: Device, pid: string) {
 export async function removeTcpForward(device: Device, port: string) {
     let deviceAdb = await getDeviceAdb(device);
     return await deviceAdb.removePortForward(port);
-}
-
-export async function activate(_sdkRoot?: string, _ndkRoot?: string) {
-    sdkRoot = _sdkRoot ?? "";
-    ndkRoot = _ndkRoot ?? "";
 }

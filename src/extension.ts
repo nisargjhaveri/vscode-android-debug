@@ -8,10 +8,11 @@ import * as targetCommand from './targetCommand';
 import * as debugConfigProvider from './debugConfigProvider';
 import * as debugLifecycleManager from './debugLifecycleManager';
 import * as android from './android';
+import * as androidPaths from './androidPaths';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
     logger.activate();
     logger.log('Activating extension "android-debug"');
 
@@ -19,16 +20,14 @@ export function activate(context: vscode.ExtensionContext) {
     targetCommand.activate(context);
     debugLifecycleManager.activate(context);
 
-    let sdkRoot: string|undefined = vscode.workspace.getConfiguration().get("android-debug.sdkRoot");
-    let ndkRoot: string|undefined = vscode.workspace.getConfiguration().get("android-debug.ndkRoot");
-    android.activate(sdkRoot, ndkRoot);
-
     context.subscriptions.push(vscode.commands.registerCommand('android-debug.pickAndroidProcess', targetCommand.pickAndroidProcess));
     context.subscriptions.push(vscode.commands.registerCommand('android-debug.getBestAbi', targetCommand.getBestAbi));
     context.subscriptions.push(vscode.commands.registerCommand('android-debug.getBestMappedAbi', targetCommand.getBestMappedAbi));
 
     context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('lldb', new debugConfigProvider.LLDBDebugConfigurationProvider()));
     context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('java', new debugConfigProvider.JavaDebugConfigurationProvider()));
+
+    await androidPaths.activate(context);
 }
 
 // this method is called when your extension is deactivated
