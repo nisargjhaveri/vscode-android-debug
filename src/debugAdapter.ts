@@ -88,7 +88,6 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
             let lldbConfig = this.prepareNativeDebugConfiguration(config);
 
             lldbSuccess = await vscode.debug.startDebugging(this.session.workspaceFolder, lldbConfig, {
-                lifecycleManagedByParent: false,
                 parentSession: this.session
             });
         }

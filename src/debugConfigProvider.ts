@@ -63,7 +63,7 @@ export class LLDBDebugConfigurationProvider implements vscode.DebugConfiguration
         dbgConfig.initCommands.unshift(`platform connect unix-abstract-connect://[${target.udid}]${socket}`);
         dbgConfig.initCommands.unshift(`platform select remote-android`);
 
-        dbgConfig.initCommands.push(`settings set target.inherit-env false`);
+        dbgConfig.initCommands.push(`"settings set plugin.jit-loader.gdb.enable off"`);
         if (dbgConfig.symbolSearchPaths) {
             for (let symbolSeachPath of dbgConfig.symbolSearchPaths) {
                 dbgConfig.initCommands.push(`settings append target.exec-search-paths '${symbolSeachPath}'`);
