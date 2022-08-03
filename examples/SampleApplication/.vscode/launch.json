@@ -27,8 +27,8 @@
             "pid": "${command:pickAndroidProcess}",
             "target": "select",
             "mode": "dual",
+            "packageName": "com.example.sampleapplication",
             "native": {
-                "androidPackageName": "com.example.sampleapplication",
                 "symbolSearchPaths": [
                     "${workspaceFolder}/app/build/intermediates/cmake/debug/obj/${command:abi}/",
                 ],

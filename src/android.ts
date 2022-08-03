@@ -118,6 +118,10 @@ async function getLldbServer(abi: string): Promise<string> {
 }
 
 export async function startLldbServer(device: Device, packageName: string, abi: string) {
+    if (!packageName) {
+        throw new Error("Valid package name is required.");
+    }
+
     let deviceAdb = await getDeviceAdb(device);
     let lldbServerPath = await getLldbServer(abi);
 

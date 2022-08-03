@@ -38,6 +38,7 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
             "pid": config.pid,
             "androidTarget": config.target.udid,
             "androidAbi": config.native.abi,
+            "androidPackageName": config.packageName,
         };
 
         let excludeProperties = ["abi", "abiSupported", "abiMap"];
@@ -77,8 +78,6 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
 
     protected async attachRequest(response: DebugProtocol.AttachResponse, args: DebugProtocol.AttachRequestArguments, request?: DebugProtocol.Request | undefined): Promise<void> {
         let config = this.session.configuration;
-
-        config.mode = (config.mode === "auto" ? "dual" : config.mode);
 
         let lldbEnabled = config.mode === "dual" || config.mode === "native";
         let javaEnabled = config.mode === "dual" || config.mode === "java";

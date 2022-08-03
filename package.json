@@ -166,7 +166,7 @@
                         ],
                         "properties": {
                             "target": {
-                                "description": "Specify target serial or `select` to select target.",
+                                "description": "Target serial or `select` to select target device.",
                                 "anyOf": [
                                     {
                                         "type": "string"
@@ -181,7 +181,7 @@
                                 "default": "select"
                             },
                             "pid": {
-                                "description": "The Android process you want to attach to.",
+                                "description": "The Android process to attach.",
                                 "anyOf": [
                                     {
                                         "type": "number"
@@ -193,18 +193,21 @@
                                     }
                                 ]
                             },
+                            "packageName": {
+                                "description": "The package name of the app.",
+                                "type": "string"
+                            },
                             "mode": {
-                                "description": "Debugger mode",
+                                "description": "Debugger mode, `java`, `native` or `dual`",
                                 "enum": [
-                                    "auto",
                                     "native",
                                     "java",
                                     "dual"
                                 ],
-                                "default": "auto"
+                                "default": "dual"
                             },
                             "native": {
-                                "description": "Configuration for native debugger",
+                                "description": "Configuration for native debugger.",
                                 "type": "object",
                                 "properties": {
                                     "abiSupported": {
@@ -238,7 +241,7 @@
                                         ]
                                     },
                                     "abiMap": {
-                                        "description": "Map android ABI to custom strings, use ${command:mappedAbi}",
+                                        "description": "Map android ABI to custom strings, use with ${command:mappedAbi}.",
                                         "type": "object",
                                         "properties": {
                                             "armeabi": {
@@ -259,7 +262,7 @@
                                         }
                                     },
                                     "symbolSearchPaths": {
-                                        "description": "List of paths to where your unstripped so files are located",
+                                        "description": "List of paths to where your unstripped so files are located.",
                                         "type": "array",
                                         "items": {
                                             "type": "string"
@@ -268,10 +271,11 @@
                                 }
                             },
                             "java": {
-                                "description": "Configuration for java debugger",
+                                "description": "Configuration for java debugger.",
                                 "type": "object",
                                 "properties": {
                                     "sourcePaths": {
+                                        "description": "Path to your java source code for the app.",
                                         "type": "array",
                                         "items": {
                                             "type": "string"

@@ -82,7 +82,7 @@ export async function lldbServer(args: {device: Device, packageName: string, abi
                 return socket;
             })
             .catch((e) => {
-                vscode.window.showErrorMessage("Failed to start lldb server");
+                vscode.window.showErrorMessage(`Failed to start lldb server: ${e.message}`);
             });
     });
 }
