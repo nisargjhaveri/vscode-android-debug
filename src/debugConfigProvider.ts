@@ -33,7 +33,7 @@ export class LLDBDebugConfigurationProvider implements vscode.DebugConfiguration
         dbgConfig.androidTarget = target;
 
         targetPicker.setCurrentTarget(target);
-        targetCommand.setCurrentDebugConfiguration(dbgConfig);
+        targetCommand.setAbiResolutionInfo(dbgConfig.androidAbi, dbgConfig.androidAbiSupported, dbgConfig.androidAbiMap);
 
         return dbgConfig;
     }
@@ -45,15 +45,15 @@ export class LLDBDebugConfigurationProvider implements vscode.DebugConfiguration
 
         let target: Target = dbgConfig.androidTarget;
 
-        dbgConfig.androidAppAbi = await targetCommand.getBestAbi({device: target});
+        dbgConfig.androidAbi = await targetCommand.getBestAbi({device: target});
 
         targetPicker.resetCurrentTarget();
-        targetCommand.resetCurrentDebugConfiguration();
+        targetCommand.resetAbiResolutionInfo();
 
         let socket = await targetCommand.lldbServer({
             device: target, 
             packageName: dbgConfig.androidPackageName,
-            abi: dbgConfig.androidAppAbi
+            abi: dbgConfig.androidAbi
         });
         if (!socket) { return null; }
 

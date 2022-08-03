@@ -13,8 +13,6 @@ import * as androidPaths from './androidPaths';
 let adb: ADB;
 let forceRecreateAdb = false;
 
-const defaultAppAbis = ["armeabi-v7a", "arm64-v8a", "x86", "x86_64"];
-
 export async function handlePathsUpdated() {
     forceRecreateAdb = true;
 }
@@ -63,6 +61,40 @@ export async function isDeviceConnected(udid: string): Promise<boolean> {
     return found.length > 0;
 }
 
+async function getDeviceAbiList(deviceAdb: ADB) {
+    let abilist = [];
+
+    abilist.push(...(await deviceAdb.getDeviceProperty("ro.product.cpu.abilist")).split(","));
+
+    if (!abilist.length) {
+        abilist.push(...[
+            await deviceAdb.getDeviceProperty("ro.product.cpu.abi"),
+            await deviceAdb.getDeviceProperty("ro.product.cpu.abi2")
+        ]);
+    }
+
+    abilist.filter((item) => {
+        return item && item.length;
+    });
+
+    return abilist;
+}
+
+export async function getBestAbi(device: Device, abiSupportedList: string[]) {
+    let deviceAdb = await getDeviceAdb(device);
+    let deviceAbiList = await getDeviceAbiList(deviceAdb);
+
+    abiSupportedList = abiSupportedList;
+
+    for (let abi of deviceAbiList) {
+        if (abiSupportedList.indexOf(abi) >= 0) {
+            return abi;
+        }
+    }
+
+    throw new Error("Cannot find appropriate ABI to use");
+}
+
 async function getLldbServer(abi: string): Promise<string> {
     try {
         let platform = os.platform();
@@ -85,52 +117,9 @@ async function getLldbServer(abi: string): Promise<string> {
     }
 }
 
-async function getDeviceAbiList(deviceAdb: ADB) {
-    let abilist = [];
-
-    abilist.push(...(await deviceAdb.getDeviceProperty("ro.product.cpu.abilist")).split(","));
-
-    if (!abilist.length) {
-        abilist.push(...[
-            await deviceAdb.getDeviceProperty("ro.product.cpu.abi"),
-            await deviceAdb.getDeviceProperty("ro.product.cpu.abi2")
-        ]);
-    }
-
-    abilist.filter((item, pos, self) => {
-        return item && item.length;
-    });
-
-    return abilist;
-}
-
-export async function getBestAbi(device: Device, appAbiList?: string[]) {
-    return await getBestAbiInternal(await getDeviceAdb(device), appAbiList);
-}
-
-async function getBestAbiInternal(deviceAdb:ADB, appAbiList?: string[]) {
-    let deviceAbiList = await getDeviceAbiList(deviceAdb);
-
-    appAbiList = appAbiList ?? defaultAppAbis;
-
-    for (let abi of deviceAbiList) {
-        if (appAbiList.indexOf(abi) >= 0) {
-            return abi;
-        }
-    }
-
-    throw new Error("Cannot find appropriate ABI to use");
-}
-
-async function getLLdbServerForDevice(abi: string) {
-    let lldbServerPath = await getLldbServer(abi);
-
-    return lldbServerPath;
-}
-
 export async function startLldbServer(device: Device, packageName: string, abi: string) {
     let deviceAdb = await getDeviceAdb(device);
-    let lldbServerPath = await getLLdbServerForDevice(abi);
+    let lldbServerPath = await getLldbServer(abi);
 
     logger.log(`Using lldb-server at ${lldbServerPath}`);
 

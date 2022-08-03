@@ -10,10 +10,12 @@ let lldbProcessKillers: {[socket: string]: () => void} = {};
 let currentDebugConfiguration: vscode.DebugConfiguration|undefined;
 
 let lastPickedAbi: string|undefined;
-let currentBestAbi: string|undefined;
-let didResolveCurrentBestAbi = false;
 
-const allSupportedAbis = ["armeabi", "armeabi-v7a", "arm64-v8a", "x86", "x86_64"];
+let currentAbiSupportedList: string[]|undefined;
+let currentAbiMap: {[abi: string]: string}|undefined;
+let currentAbi: string|undefined;
+
+const defaultAbiSupportedList = ["armeabi", "armeabi-v7a", "arm64-v8a", "x86", "x86_64"];
 
 async function resolveArgs<T extends {device?: Device}>(args: T): Promise<T>
 {
@@ -41,10 +43,8 @@ export async function pickAndroidProcess(args: {device: Device}) {
     return (await vscode.window.showQuickPick(quickPickProcesses, {title: "Pick Android Process", matchOnDescription: true}))?.pid;
 }
 
-async function pickAppAbi(appSupportedAbiList?: string[]) {
-    appSupportedAbiList = appSupportedAbiList ?? allSupportedAbis;
-
-    let abiOptions = appSupportedAbiList.sort((a, b) => {
+async function pickAppAbi(abiSupportedList: string[]) {
+    let abiOptions = abiSupportedList.sort((a, b) => {
         if (a === lastPickedAbi) { return -1; }
         if (b === lastPickedAbi) { return 1; }
         return a.localeCompare(b);
@@ -99,45 +99,50 @@ export function lldbServerCleanup(socket: string) {
     delete lldbProcessKillers[socket];
 }
 
-async function getBestAbiInternal(device: Device) {
-    let appSupportedAbiList: string[]|undefined = currentDebugConfiguration?.androidAppSupportedAbis ?? undefined;
-    let appAbi: string = currentDebugConfiguration?.androidAppAbi ?? undefined;
-
-    if (appAbi && appAbi === "select") {
-        return await pickAppAbi(appSupportedAbiList);
-    }
-    else if (appAbi) {
-        return appAbi;
-    }
-    else {
-        return await android.getBestAbi(device, appSupportedAbiList);
-    }
+export function setAbiResolutionInfo(abi: string, abiSupportedList: string[], abiMap: {[abi: string]: string}) {
+    currentAbi = abi;
+    currentAbiSupportedList = abiSupportedList;
+    currentAbiMap = abiMap;
 }
 
-export async function getBestAbi(args: {device: Device}) {
-    let {device} = await resolveArgs(args);
-
-    if (!currentDebugConfiguration) {
-        return await getBestAbiInternal(device);
-    }
-
-    if (!didResolveCurrentBestAbi) {
-        currentBestAbi = await getBestAbiInternal(device);
-    }
-
-    didResolveCurrentBestAbi = true;
-
-    return currentBestAbi;
+export function resetAbiResolutionInfo() {
+    currentAbi = undefined;
+    currentAbiSupportedList = undefined;
+    currentAbiMap = undefined;
 }
 
 function getMappedAbi(abi?: string): string|undefined {
-    let abiMap = currentDebugConfiguration?.androidAbiMap ?? {};
+    let abiMap = currentAbiMap ?? {};
 
     if (abi && (abi in abiMap)) {
         return abiMap[abi];
     }
 
     return undefined;
+}
+
+export async function getBestAbi(args: {device: Device}) {
+    let {device} = await resolveArgs(args);
+
+    let abiSupportedList = currentAbiSupportedList ?? defaultAbiSupportedList;
+
+    if (currentAbi) {
+        if (currentAbi === "select") {
+            let pickedAbi = await pickAppAbi(abiSupportedList);
+
+            if (pickedAbi) {
+                currentAbi = pickedAbi;
+            }
+            else {
+                return undefined;
+            }
+        }
+
+        return currentAbi;
+    }
+    else {
+        return await android.getBestAbi(device, abiSupportedList);
+    }
 }
 
 export async function getBestMappedAbi(args: {device: Device}) {
@@ -156,18 +161,6 @@ export async function forwardJdwpPort(args: {device: Device, pid: string}) {
 
 export async function removeTcpForward(device: Device, port: string) {
     return await android.removeTcpForward(device, port);
-}
-
-export function setCurrentDebugConfiguration(dbgConfig: vscode.DebugConfiguration) {
-    currentDebugConfiguration = dbgConfig;
-    currentBestAbi = undefined;
-    didResolveCurrentBestAbi = false;
-}
-
-export function resetCurrentDebugConfiguration() {
-    currentDebugConfiguration = undefined;
-    currentBestAbi = undefined;
-    didResolveCurrentBestAbi = false;
 }
 
 export function activate(c: vscode.ExtensionContext) {

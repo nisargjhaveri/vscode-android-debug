@@ -61,7 +61,7 @@
                                 "description": "Package name of the app to debug",
                                 "type": "string"
                             },
-                            "androidAppSupportedAbis": {
+                            "androidAbiSupported": {
                                 "description": "List of ABIs supported by the app",
                                 "type": "array",
                                 "items": {
@@ -80,7 +80,7 @@
                                     "x86_64"
                                 ]
                             },
-                            "androidAppAbi": {
+                            "androidAbi": {
                                 "description": "The ABI that is installed in case of split APKs.",
                                 "enum": [
                                     "select",
