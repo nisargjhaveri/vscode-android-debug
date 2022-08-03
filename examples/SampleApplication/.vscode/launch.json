@@ -19,6 +19,23 @@
             "processId": "${command:pickAndroidProcess}",
             "androidTarget": "select",
             "sourcePaths": ["${workspaceFolder}/app/src/main/java"]
+        },
+        {
+            "name": "Android",
+            "type": "android",
+            "request": "attach",
+            "pid": "${command:pickAndroidProcess}",
+            "target": "select",
+            "mode": "dual",
+            "native": {
+                "androidPackageName": "com.example.sampleapplication",
+                "symbolSearchPaths": [
+                    "${workspaceFolder}/app/build/intermediates/cmake/debug/obj/${command:abi}/",
+                ],
+            },
+            "java": {
+                "sourcePaths": ["${workspaceFolder}/app/src/main/java"]
+            }
         }
     ]
 }

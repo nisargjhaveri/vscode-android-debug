@@ -7,7 +7,7 @@ import * as targetPicker from './targetPicker';
 import * as targetCommand from './targetCommand';
 import * as debugConfigProvider from './debugConfigProvider';
 import * as debugLifecycleManager from './debugLifecycleManager';
-import * as android from './android';
+import * as debugAdapter from './debugAdapter';
 import * as androidPaths from './androidPaths';
 
 // this method is called when your extension is activated
@@ -26,6 +26,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('lldb', new debugConfigProvider.LLDBDebugConfigurationProvider()));
     context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('java', new debugConfigProvider.JavaDebugConfigurationProvider()));
+    context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('android', new debugConfigProvider.AndroidDebugConfigurationProvider()));
+
+    context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('android', new debugAdapter.DebugAdapterDescriptorFactory(context)));
 
     await androidPaths.activate(context);
 }

@@ -14,7 +14,8 @@
     "activationEvents": [
         "onCommand:android-debug.pickAndroidProcess",
         "onDebugResolve:lldb",
-        "onDebugResolve:java"
+        "onDebugResolve:java",
+        "onDebugResolve:android"
     ],
     "main": "./out/extension.js",
     "contributes": {
@@ -149,6 +150,138 @@
                         }
                     }
                 }
+            },
+            {
+                "type": "android",
+                "label": "Android",
+                "variables": {
+                    "pickAndroidProcess": "android-debug.pickAndroidProcess",
+                    "abi": "android-debug.getBestAbi",
+                    "mappedAbi": "android-debug.getBestMappedAbi"
+                },
+                "configurationAttributes": {
+                    "attach": {
+                        "required": [
+                            "pid"
+                        ],
+                        "properties": {
+                            "target": {
+                                "description": "Specify target serial or `select` to select target.",
+                                "anyOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "enum": [
+                                            "select",
+                                            "last-selected"
+                                        ]
+                                    }
+                                ],
+                                "default": "select"
+                            },
+                            "pid": {
+                                "description": "The Android process you want to attach to.",
+                                "anyOf": [
+                                    {
+                                        "type": "number"
+                                    },
+                                    {
+                                        "enum": [
+                                            "${command:pickAndroidProcess}"
+                                        ]
+                                    }
+                                ]
+                            },
+                            "mode": {
+                                "description": "Debugger mode",
+                                "enum": [
+                                    "auto",
+                                    "native",
+                                    "java",
+                                    "dual"
+                                ],
+                                "default": "auto"
+                            },
+                            "native": {
+                                "description": "Configuration for native debugger",
+                                "type": "object",
+                                "properties": {
+                                    "abiSupported": {
+                                        "description": "List of ABIs supported by the app",
+                                        "type": "array",
+                                        "items": {
+                                            "enum": [
+                                                "armeabi",
+                                                "armeabi-v7a",
+                                                "arm64-v8a",
+                                                "x86",
+                                                "x86_64"
+                                            ]
+                                        },
+                                        "default": [
+                                            "armeabi-v7a",
+                                            "arm64-v8a",
+                                            "x86",
+                                            "x86_64"
+                                        ]
+                                    },
+                                    "abi": {
+                                        "description": "The ABI to be used in case of split APKs.",
+                                        "enum": [
+                                            "select",
+                                            "armeabi",
+                                            "armeabi-v7a",
+                                            "arm64-v8a",
+                                            "x86",
+                                            "x86_64"
+                                        ]
+                                    },
+                                    "abiMap": {
+                                        "description": "Map android ABI to custom strings, use ${command:mappedAbi}",
+                                        "type": "object",
+                                        "properties": {
+                                            "armeabi": {
+                                                "type": "string"
+                                            },
+                                            "armeabi-v7a": {
+                                                "type": "string"
+                                            },
+                                            "arm64-v8a": {
+                                                "type": "string"
+                                            },
+                                            "x86": {
+                                                "type": "string"
+                                            },
+                                            "x86_64": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "symbolSearchPaths": {
+                                        "description": "List of paths to where your unstripped so files are located",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            },
+                            "java": {
+                                "description": "Configuration for java debugger",
+                                "type": "object",
+                                "properties": {
+                                    "sourcePaths": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         ]
     },
@@ -177,6 +310,7 @@
         "typescript": "^4.7.4"
     },
     "dependencies": {
+        "@vscode/debugadapter": "^1.56.1",
         "appium-adb": "^9.10.1"
     },
     "extensionDependencies": [

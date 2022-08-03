@@ -21,7 +21,7 @@ async function getTarget(androidTarget: string): Promise<Target|undefined> {
 export class LLDBDebugConfigurationProvider implements vscode.DebugConfigurationProvider
 {
     async resolveDebugConfiguration(folder: vscode.WorkspaceFolder|undefined, dbgConfig: vscode.DebugConfiguration, token: vscode.CancellationToken) {
-        logger.log("resolveDebugConfiguration", dbgConfig);
+        logger.log("lldb resolveDebugConfiguration", dbgConfig);
 
         if (!dbgConfig.androidTarget) { return dbgConfig; }
 
@@ -39,7 +39,7 @@ export class LLDBDebugConfigurationProvider implements vscode.DebugConfiguration
     }
 
     async resolveDebugConfigurationWithSubstitutedVariables(folder: vscode.WorkspaceFolder|undefined, dbgConfig: vscode.DebugConfiguration, token: vscode.CancellationToken) {
-        logger.log("resolveDebugConfigurationWithSubstitutedVariables", dbgConfig);
+        logger.log("lldb resolveDebugConfigurationWithSubstitutedVariables", dbgConfig);
 
         if (!dbgConfig.androidTarget) { return dbgConfig; }
 
@@ -64,11 +64,13 @@ export class LLDBDebugConfigurationProvider implements vscode.DebugConfiguration
         dbgConfig.initCommands.unshift(`platform select remote-android`);
 
         dbgConfig.initCommands.push(`settings set target.inherit-env false`);
-        for (let symbolSeachPath of dbgConfig.symbolSearchPaths) {
-            dbgConfig.initCommands.push(`settings append target.exec-search-paths '${symbolSeachPath}'`);
+        if (dbgConfig.symbolSearchPaths) {
+            for (let symbolSeachPath of dbgConfig.symbolSearchPaths) {
+                dbgConfig.initCommands.push(`settings append target.exec-search-paths '${symbolSeachPath}'`);
+            }
         }
 
-        logger.log("resolved debug configuration", dbgConfig);
+        logger.log("lldb resolved debug configuration", dbgConfig);
         return dbgConfig;
     }
 }
@@ -76,7 +78,7 @@ export class LLDBDebugConfigurationProvider implements vscode.DebugConfiguration
 export class JavaDebugConfigurationProvider implements vscode.DebugConfigurationProvider
 {
     async resolveDebugConfiguration(folder: vscode.WorkspaceFolder|undefined, dbgConfig: vscode.DebugConfiguration, token: vscode.CancellationToken) {
-        logger.log("resolveDebugConfiguration", dbgConfig);
+        logger.log("java resolveDebugConfiguration", dbgConfig);
 
         if (!dbgConfig.androidTarget) { return dbgConfig; }
 
@@ -101,7 +103,7 @@ export class JavaDebugConfigurationProvider implements vscode.DebugConfiguration
     }
 
     async resolveDebugConfigurationWithSubstitutedVariables(folder: vscode.WorkspaceFolder|undefined, dbgConfig: vscode.DebugConfiguration, token: vscode.CancellationToken) {
-        logger.log("resolveDebugConfigurationWithSubstitutedVariables", dbgConfig);
+        logger.log("java resolveDebugConfigurationWithSubstitutedVariables", dbgConfig);
 
         if (!dbgConfig.androidTarget) { return dbgConfig; }
 
@@ -120,7 +122,47 @@ export class JavaDebugConfigurationProvider implements vscode.DebugConfiguration
         dbgConfig.hostName = "localhost";
         dbgConfig.port = port;
 
-        logger.log("resolved debug configuration", dbgConfig);
+        logger.log("java resolved debug configuration", dbgConfig);
         return dbgConfig;
     }
 }
+
+export class AndroidDebugConfigurationProvider implements vscode.DebugConfigurationProvider
+{
+    async resolveDebugConfiguration(folder: vscode.WorkspaceFolder|undefined, dbgConfig: vscode.DebugConfiguration, token: vscode.CancellationToken) {
+        logger.log("android resolveDebugConfiguration", dbgConfig);
+
+        if (dbgConfig.request !== "attach") { return null; }
+
+        let target: Target|undefined = await getTarget(dbgConfig.target ?? "select");
+        if (!target) { return null; }
+
+        dbgConfig.target = target;
+
+        targetPicker.setCurrentTarget(target);
+        targetCommand.setAbiResolutionInfo(dbgConfig.native?.abi, dbgConfig.native?.abiSupported, dbgConfig.native?.abiMap);
+
+        return dbgConfig;
+    }
+
+    async resolveDebugConfigurationWithSubstitutedVariables(folder: vscode.WorkspaceFolder|undefined, dbgConfig: vscode.DebugConfiguration, token: vscode.CancellationToken) {
+        logger.log("android resolveDebugConfigurationWithSubstitutedVariables", dbgConfig);
+
+        if (!dbgConfig.target) { return dbgConfig; }
+
+        let target: Target = dbgConfig.target;
+
+        dbgConfig.mode = dbgConfig.mode ?? "auto";
+
+        if (dbgConfig.mode === "native" || dbgConfig.mode === "dual") {
+            dbgConfig.native = dbgConfig.native ?? {};
+            dbgConfig.native.abi = await targetCommand.getBestAbi({device: target});
+        }
+
+        targetPicker.resetCurrentTarget();
+        targetCommand.resetAbiResolutionInfo();
+
+        logger.log("android resolved debug configuration", dbgConfig);
+        return dbgConfig;
+     }
+ }
