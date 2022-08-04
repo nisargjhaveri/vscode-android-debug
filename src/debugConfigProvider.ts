@@ -34,6 +34,7 @@ export class LLDBDebugConfigurationProvider implements vscode.DebugConfiguration
 
         targetPicker.setCurrentTarget(target);
         targetCommand.setAbiResolutionInfo(dbgConfig.androidAbi, dbgConfig.androidAbiSupported, dbgConfig.androidAbiMap);
+        targetCommand.setProcessPickerInfo(dbgConfig.androidPackageName);
 
         return dbgConfig;
     }
@@ -49,6 +50,7 @@ export class LLDBDebugConfigurationProvider implements vscode.DebugConfiguration
 
         targetPicker.resetCurrentTarget();
         targetCommand.resetAbiResolutionInfo();
+        targetCommand.resetProcessPickerInfo();
 
         let socket = await targetCommand.lldbServer({
             device: target, 
@@ -141,6 +143,7 @@ export class AndroidDebugConfigurationProvider implements vscode.DebugConfigurat
 
         targetPicker.setCurrentTarget(target);
         targetCommand.setAbiResolutionInfo(dbgConfig.native?.abi, dbgConfig.native?.abiSupported, dbgConfig.native?.abiMap);
+        targetCommand.setProcessPickerInfo(dbgConfig.packageName);
 
         return dbgConfig;
     }
@@ -161,6 +164,7 @@ export class AndroidDebugConfigurationProvider implements vscode.DebugConfigurat
 
         targetPicker.resetCurrentTarget();
         targetCommand.resetAbiResolutionInfo();
+        targetCommand.resetProcessPickerInfo();
 
         logger.log("android resolved debug configuration", dbgConfig);
         return dbgConfig;

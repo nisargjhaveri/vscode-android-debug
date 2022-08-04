@@ -151,21 +151,18 @@ export async function startLldbServer(device: Device, packageName: string, abi: 
     };
 }
 
-export async function getProcessList(device: Device) {
+export async function getProcessList(device: Device, populatePackageNames: boolean = false) {
     let deviceAdb = await getDeviceAdb(device);
 
     let subprocess = deviceAdb.createSubProcess(['jdwp']);
     subprocess.start();
 
-    let processList: {pid: string, name: string}[] = [];
+    let processList: {pid: string, name: string, packages: string[]}[] = [];
     subprocess.on('lines-stdout', async (lines: string[]) => {
         let processes = await Promise.all(
             lines
                 .map((l) => l.trim())
-                .map(async (pid: string) => ({
-                    pid: pid.trim(),
-                    name: await deviceAdb.getNameByPid(pid)
-                }))
+                .map(async (pid: string) => await getProcessInfo(deviceAdb, pid, populatePackageNames))
         );
 
         processList.push(...processes);
@@ -179,6 +176,42 @@ export async function getProcessList(device: Device) {
     logger.log("getProcessList", processList);
 
     return processList;
+}
+
+async function getProcessInfo(deviceAdb: ADB, pid: string, populatePackageNames: boolean) {
+    let name = await deviceAdb.getNameByPid(pid);
+    let packages: string[] = [];
+
+    if (populatePackageNames) {
+        packages = await getPackagesForProcess(deviceAdb, pid);
+
+        packages = packages.sort((a, b) => {
+            if (a === name) { return -1; }
+            if (b === name) { return 1; }
+            return a.localeCompare(b);
+        });
+    }
+
+    return {
+        pid,
+        name,
+        packages
+    };
+}
+
+async function getPackagesForProcess(deviceAdb: ADB, pid: string) {
+    let packages: string[] = [];
+    try {
+        let out = await deviceAdb.shell(`stat -c %u /proc/${pid} | xargs -n 1 cmd package list packages --uid`);
+        let pattern = /^package:(\S+)\s+.*/gm;
+
+        packages = [...out.matchAll(pattern)].map((match) => match[1]);
+    }
+    catch {
+        // Ignore errors
+    }
+
+    return packages;
 }
 
 export async function forwardJdwpPort(device: Device, pid: string) {

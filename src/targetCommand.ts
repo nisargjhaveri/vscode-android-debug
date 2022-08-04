@@ -7,13 +7,13 @@ import { getCurrentOrPickTarget } from './targetPicker';
 let context: vscode.ExtensionContext;
 let lldbProcessKillers: {[socket: string]: () => void} = {};
 
-let currentDebugConfiguration: vscode.DebugConfiguration|undefined;
-
 let lastPickedAbi: string|undefined;
 
 let currentAbiSupportedList: string[]|undefined;
 let currentAbiMap: {[abi: string]: string}|undefined;
 let currentAbi: string|undefined;
+
+let currentPackageName: string|undefined;
 
 const defaultAbiSupportedList = ["armeabi", "armeabi-v7a", "arm64-v8a", "x86", "x86_64"];
 
@@ -27,17 +27,35 @@ async function resolveArgs<T extends {device?: Device}>(args: T): Promise<T>
     return args;
 }
 
+export function setProcessPickerInfo(packageName: string) {
+    currentPackageName = packageName;
+}
+
+export function resetProcessPickerInfo() {
+    currentPackageName = undefined;
+}
+
 export async function pickAndroidProcess(args: {device: Device}) {
     let {device} = await resolveArgs(args);
 
-    let processList = android.getProcessList(device);
+    let quickPickProcesses: Promise<(vscode.QuickPickItem & {pid:string})[]> = new Promise(async (resolve, reject) => {
+        let processList = await android.getProcessList(device, Boolean(currentPackageName));
 
-    let quickPickProcesses = processList.then((processList): (vscode.QuickPickItem & {pid:string})[] => {
-        return processList.map(p => ({
-            label: p.name,
-            description: p.pid,
-            pid: p.pid
-        }));
+        let quickPickItems = processList
+            .sort((a, b) => {
+                if (currentPackageName) {
+                    let result = Number(b.packages.includes(currentPackageName)) - Number(a.packages.includes(currentPackageName));
+                    if (result !== 0) { return result; }
+                }
+                return a.name.localeCompare(b.name);
+            })
+            .map(p => ({
+                label: p.name,
+                description: p.pid,
+                pid: p.pid
+            }));
+
+        resolve(quickPickItems);
     });
 
     return (await vscode.window.showQuickPick(quickPickProcesses, {title: "Pick Android Process", matchOnDescription: true}))?.pid;
