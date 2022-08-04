@@ -101,7 +101,7 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
         }
 
         response.success = lldbSuccess && javaSuccess;
-        
+
         if (!response.success) {
             response.message = !lldbSuccess ? "Could not start native debugger" : !javaSuccess ? "Could not start java debugger" : "Could not start android debugger";
         }

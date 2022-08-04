@@ -152,7 +152,7 @@ export class AndroidDebugConfigurationProvider implements vscode.DebugConfigurat
 
         let target: Target = dbgConfig.target;
 
-        dbgConfig.mode = dbgConfig.mode ?? "dual";
+        dbgConfig.mode = dbgConfig.mode ?? "native";
 
         if (dbgConfig.mode === "native" || dbgConfig.mode === "dual") {
             dbgConfig.native = dbgConfig.native ?? {};
