@@ -189,7 +189,7 @@ async function getProcessInfoInternal(deviceAdb: ADB, pid: string, populatePacka
             if (a === name) { return -1; }
             if (b === name) { return 1; }
 
-            let result = Number(b.startsWith(name)) - Number(a.startsWith(name));
+            let result = Number(name.startsWith(b)) - Number(name.startsWith(a));
             if (result !== 0) {return result; }
 
             return a.localeCompare(b);
