@@ -3,7 +3,7 @@
     "publisher": "nisargjhaveri",
     "displayName": "Android Native Debug",
     "description": "Android Native Debugging support in VS Code",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "repository": "https://github.com/nisargjhaveri/vscode-android-debug",
     "engines": {
         "vscode": "^1.56.0"
