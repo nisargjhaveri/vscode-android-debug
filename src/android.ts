@@ -162,7 +162,7 @@ export async function getProcessList(device: Device, populatePackageNames: boole
         let processes = await Promise.all(
             lines
                 .map((l) => l.trim())
-                .map(async (pid: string) => await getProcessInfo(deviceAdb, pid, populatePackageNames))
+                .map(async (pid: string) => await getProcessInfoInternal(deviceAdb, pid, populatePackageNames))
         );
 
         processList.push(...processes);
@@ -178,7 +178,7 @@ export async function getProcessList(device: Device, populatePackageNames: boole
     return processList;
 }
 
-async function getProcessInfo(deviceAdb: ADB, pid: string, populatePackageNames: boolean) {
+async function getProcessInfoInternal(deviceAdb: ADB, pid: string, populatePackageNames: boolean) {
     let name = await deviceAdb.getNameByPid(pid);
     let packages: string[] = [];
 
@@ -188,6 +188,10 @@ async function getProcessInfo(deviceAdb: ADB, pid: string, populatePackageNames:
         packages = packages.sort((a, b) => {
             if (a === name) { return -1; }
             if (b === name) { return 1; }
+
+            let result = Number(b.startsWith(name)) - Number(a.startsWith(name));
+            if (result !== 0) {return result; }
+
             return a.localeCompare(b);
         });
     }
@@ -197,6 +201,10 @@ async function getProcessInfo(deviceAdb: ADB, pid: string, populatePackageNames:
         name,
         packages
     };
+}
+
+export async function getProcessInfo(device: Device, pid: string, populatePackageNames: boolean) {
+    return getProcessInfoInternal(await getDeviceAdb(device), pid, populatePackageNames);
 }
 
 async function getPackagesForProcess(deviceAdb: ADB, pid: string) {

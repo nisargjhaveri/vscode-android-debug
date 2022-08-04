@@ -54,7 +54,7 @@ export class LLDBDebugConfigurationProvider implements vscode.DebugConfiguration
 
         let socket = await targetCommand.lldbServer({
             device: target, 
-            packageName: dbgConfig.androidPackageName,
+            packageName: dbgConfig.androidPackageName ?? await targetCommand.getPackageNameForPid({device: target, pid: dbgConfig.pid}),
             abi: dbgConfig.androidAbi
         });
         if (!socket) { return null; }
@@ -156,6 +156,8 @@ export class AndroidDebugConfigurationProvider implements vscode.DebugConfigurat
         let target: Target = dbgConfig.target;
 
         dbgConfig.mode = dbgConfig.mode ?? "native";
+
+        dbgConfig.packageName = dbgConfig.packageName ?? await targetCommand.getPackageNameForPid({device: target, pid: dbgConfig.pid});
 
         if (dbgConfig.mode === "native" || dbgConfig.mode === "dual") {
             dbgConfig.native = dbgConfig.native ?? {};

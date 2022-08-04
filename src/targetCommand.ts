@@ -61,6 +61,18 @@ export async function pickAndroidProcess(args: {device: Device}) {
     return (await vscode.window.showQuickPick(quickPickProcesses, {title: "Pick Android Process", matchOnDescription: true}))?.pid;
 }
 
+export async function getPackageNameForPid(args: {device: Device, pid: string}) {
+    let {device, pid} = await resolveArgs(args);
+
+    let processInfo = await android.getProcessInfo(device, pid, true);
+
+    if (processInfo.packages?.length) {
+        return processInfo.packages[0];
+    }
+
+    return undefined;
+}
+
 async function pickAppAbi(abiSupportedList: string[]) {
     let abiOptions = abiSupportedList.sort((a, b) => {
         if (a === lastPickedAbi) { return -1; }
