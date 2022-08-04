@@ -32,7 +32,7 @@ async function isValidSdkRoot(sdkRoot: string) {
         let stats = await fsPromises.stat(sdkRoot);
         if (!stats.isDirectory()) { return false; }
 
-        await fsPromises.access(path.join(sdkRoot, "platform-tools", "adb"));
+        await fsPromises.access(path.join(sdkRoot, "platform-tools", os.platform() === "win32" ? "adb.exe" : "adb"));
 
         return true;
     }
