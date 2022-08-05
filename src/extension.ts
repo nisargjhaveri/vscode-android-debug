@@ -26,9 +26,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('lldb', new debugConfigProvider.LLDBDebugConfigurationProvider()));
     context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('java', new debugConfigProvider.JavaDebugConfigurationProvider()));
-    context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('android', new debugConfigProvider.AndroidDebugConfigurationProvider()));
+    context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('android-debug', new debugConfigProvider.AndroidDebugConfigurationProvider()));
 
-    context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('android', new debugAdapter.DebugAdapterDescriptorFactory(context)));
+    context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('android-debug', new debugAdapter.DebugAdapterDescriptorFactory(context)));
 
     await androidPaths.activate(context);
 }

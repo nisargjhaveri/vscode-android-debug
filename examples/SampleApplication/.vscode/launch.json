@@ -22,7 +22,7 @@
         },
         {
             "name": "Android",
-            "type": "android",
+            "type": "android-debug",
             "request": "attach",
             "pid": "${command:pickAndroidProcess}",
             "target": "select",

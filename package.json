@@ -15,7 +15,7 @@
         "onCommand:android-debug.pickAndroidProcess",
         "onDebugResolve:lldb",
         "onDebugResolve:java",
-        "onDebugResolve:android"
+        "onDebugResolve:android-debug"
     ],
     "main": "./out/extension.js",
     "contributes": {
@@ -152,7 +152,7 @@
                 }
             },
             {
-                "type": "android",
+                "type": "android-debug",
                 "label": "Android",
                 "variables": {
                     "pickAndroidProcess": "android-debug.pickAndroidProcess",
