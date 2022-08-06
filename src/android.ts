@@ -2,8 +2,10 @@ import * as os from 'os';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as fsPromises from 'fs/promises';
+import * as ini from 'ini';
+import * as teen_process from 'teen_process';
 
-import { ADB, Device, VerboseDevice } from 'appium-adb';
+import { ADB, BinaryName, Device, VerboseDevice } from 'appium-adb';
 
 import * as logger from './logger';
 import * as utils from './utils';
@@ -230,4 +232,55 @@ export async function forwardJdwpPort(device: Device, pid: string) {
 export async function removeTcpForward(device: Device, port: string) {
     let deviceAdb = await getDeviceAdb(device);
     return await deviceAdb.removePortForward(port);
+}
+
+export async function getAvdDisplayName(avdName: string) {
+    let displayName: string|undefined = undefined;
+
+    try {
+        let avdProperties: any = await adb.getEmuImageProperties(avdName);
+
+        if (avdProperties?.path) {
+            let configPath = path.join(avdProperties.path, "config.ini");
+            let avdConfig = ini.parse(await fsPromises.readFile(configPath, 'utf8'));
+
+            displayName = avdConfig["avd.ini.displayname"];
+        }
+    }
+    catch {
+        // Ignore errors
+    }
+
+    return displayName || avdName.replace(/_/g, " ");
+}
+
+export async function getAvdList() {
+    let adb = await getAdb();
+
+    try {
+        let emulatorPath = await adb.getBinaryFromSdkRoot("emulator" as BinaryName);
+
+        let result = await teen_process.exec(emulatorPath, ['-list-avds'], {shell: false});
+
+        let avdNames: string[] = [];
+        if (result.code === 0) {
+            avdNames = result.stdout.split("\n").map((avd) => avd.trim()).filter((avd) => avd);
+        }
+
+        return avdNames;
+    }
+    catch {
+        // Ignore errors
+    }
+
+    return [];
+}
+
+export async function launchAVD(avdName: string) {
+    let adb = (await getAdb()).clone();
+    await adb.launchAVD(avdName);
+    if (adb.curDeviceId) {
+        return getDeviceFromUDID(adb.curDeviceId);
+    }
+    throw new Error("Could not launch Android Virtual Device");
 }

@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 import * as logger from './logger';
-import { Target } from './commonTypes';
+import { Device } from './commonTypes';
 import * as targetCommand from './targetCommand';
 import * as targetPicker from './targetPicker';
 
-async function getTarget(androidTarget: string): Promise<Target|undefined> {
+async function getTarget(androidTarget: string): Promise<Device|undefined> {
     if (androidTarget === "select") {
         return await targetPicker.pickTarget();
     }
@@ -27,7 +27,7 @@ export class LLDBDebugConfigurationProvider implements vscode.DebugConfiguration
 
         if (dbgConfig.request !== "attach") { return null; }
 
-        let target: Target|undefined = await getTarget(dbgConfig.androidTarget);
+        let target: Device|undefined = await getTarget(dbgConfig.androidTarget);
         if (!target) { return null; }
 
         dbgConfig.androidTarget = target;
@@ -44,7 +44,7 @@ export class LLDBDebugConfigurationProvider implements vscode.DebugConfiguration
 
         if (!dbgConfig.androidTarget) { return dbgConfig; }
 
-        let target: Target = dbgConfig.androidTarget;
+        let target: Device = dbgConfig.androidTarget;
 
         dbgConfig.androidAbi = await targetCommand.getBestAbi({device: target});
 
@@ -86,7 +86,7 @@ export class JavaDebugConfigurationProvider implements vscode.DebugConfiguration
 
         if (dbgConfig.request !== "attach") { return null; }
 
-        let target: Target|undefined = await getTarget(dbgConfig.androidTarget);
+        let target: Device|undefined = await getTarget(dbgConfig.androidTarget);
         if (!target) { return null; }
 
         dbgConfig.androidTarget = target;
@@ -109,7 +109,7 @@ export class JavaDebugConfigurationProvider implements vscode.DebugConfiguration
 
         if (!dbgConfig.androidTarget) { return dbgConfig; }
 
-        let target: Target = dbgConfig.androidTarget;
+        let target: Device = dbgConfig.androidTarget;
 
         targetPicker.resetCurrentTarget();
 
@@ -136,7 +136,7 @@ export class AndroidDebugConfigurationProvider implements vscode.DebugConfigurat
 
         if (dbgConfig.request !== "attach") { return null; }
 
-        let target: Target|undefined = await getTarget(dbgConfig.target ?? "select");
+        let target: Device|undefined = await getTarget(dbgConfig.target ?? "select");
         if (!target) { return null; }
 
         dbgConfig.target = target;
@@ -153,7 +153,7 @@ export class AndroidDebugConfigurationProvider implements vscode.DebugConfigurat
 
         if (!dbgConfig.target) { return dbgConfig; }
 
-        let target: Target = dbgConfig.target;
+        let target: Device = dbgConfig.target;
 
         dbgConfig.mode = dbgConfig.mode ?? "native";
 
