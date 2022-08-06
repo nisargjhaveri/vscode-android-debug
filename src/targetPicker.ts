@@ -52,7 +52,11 @@ async function getTargetPickerItems(): Promise<TargetQuickPickItem[]> {
 
     let avdList = await android.getAvdList();
 
-    let targets = await Promise.all((await adb.getConnectedDevices({verbose: true})).map(createTargetFromDevice));
+    let targets = await Promise.all(
+        (await adb.getConnectedDevices({verbose: true}))
+            .filter((device) => device.state === "device")
+            .map(createTargetFromDevice)
+    );
 
     targets = targets.sort((a, b) => {
         if (a.type !== b.type) {
