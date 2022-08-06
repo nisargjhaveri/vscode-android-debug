@@ -59,6 +59,9 @@ async function getTargetPickerItems(): Promise<TargetQuickPickItem[]> {
     );
 
     targets = targets.sort((a, b) => {
+        if (a.udid === lastPickedTarget?.udid) { return -1; }
+        if (b.udid === lastPickedTarget?.udid) { return 1; }
+
         if (a.type !== b.type) {
             return a.type.localeCompare(b.type);
         }
