@@ -85,8 +85,9 @@ async function getTargetPickerItems(): Promise<TargetQuickPickItem[]> {
             avdList.splice(index, 1);
         }
 
+        let icon = target.type === "Device" ? "$(device-mobile)" : "$(vm)";
         targetPickerItems.push({
-            label: target.name,
+            label: `${icon} ${target.name}`,
             detail: target.type,
             getTarget: async () => target
         });
@@ -103,7 +104,7 @@ async function getTargetPickerItems(): Promise<TargetQuickPickItem[]> {
     targetPickerItems.push(
         ...
         await Promise.all(avdList.map(async (avdName): Promise<TargetQuickPickItem> => ({
-            label: await android.getAvdDisplayName(avdName),
+            label: `$(vm-running) ${await android.getAvdDisplayName(avdName)}`,
             detail: "Emulator",
             getTarget: async () => {
                 return await android.launchAVD(avdName);
