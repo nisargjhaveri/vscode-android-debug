@@ -86,9 +86,10 @@ async function getTargetPickerItems(): Promise<TargetQuickPickItem[]> {
         }
 
         let icon = target.type === "Device" ? "$(device-mobile)" : "$(vm)";
+        let detail = target.type + (target.type === "Emulator" ? " · Running" : "");
         targetPickerItems.push({
             label: `${icon} ${target.name}`,
-            detail: target.type,
+            detail: detail,
             getTarget: async () => target
         });
     });
@@ -105,7 +106,7 @@ async function getTargetPickerItems(): Promise<TargetQuickPickItem[]> {
         ...
         await Promise.all(avdList.map(async (avdName): Promise<TargetQuickPickItem> => ({
             label: `$(vm-running) ${await android.getAvdDisplayName(avdName)}`,
-            detail: "Emulator",
+            detail: "Emulator · Stopped",
             getTarget: async () => {
                 return await android.launchAVD(avdName);
             }
@@ -120,6 +121,7 @@ export async function pickTarget()
     let quickPickOptions: vscode.QuickPickOptions = {
         title: "Select Android Target",
         matchOnDescription: true,
+        matchOnDetail: true,
     };
 
     let target = await (await vscode.window.showQuickPick(getTargetPickerItems(), quickPickOptions))?.getTarget();
