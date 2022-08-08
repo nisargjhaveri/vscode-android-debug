@@ -2,6 +2,14 @@
 
 All notable changes to the "android-debug" extension will be documented in this file.
 
+## v0.0.4
+### Breaking Changes
+- The debugger type is now `android-debug` instead of `android`.
+
+### What's new
+- Add ability to list and launch stopped AVDs from target picker.
+- Multiple other improvements in target picker.
+
 ## v0.0.3
 - Fix sdk detection on Windows
 - Minor improvement in process picker sort
