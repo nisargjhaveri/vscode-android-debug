@@ -86,7 +86,7 @@ async function getTargetPickerItems(): Promise<TargetQuickPickItem[]> {
         }
 
         let icon = target.type === "Device" ? "$(device-mobile)" : "$(vm)";
-        let detail = target.type + (target.type === "Emulator" ? " · Running" : "");
+        let detail = target.type + (target.type === "Emulator" ? " · Running" : "") + " · " + target.udid;
         targetPickerItems.push({
             label: `${icon} ${target.name}`,
             detail: detail,
