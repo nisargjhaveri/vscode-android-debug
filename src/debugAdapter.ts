@@ -15,18 +15,30 @@ export class DebugAdapterDescriptorFactory implements vscode.DebugAdapterDescrip
 
 class DebugAdapter extends debugadapter.LoggingDebugSession {
     private session: vscode.DebugSession;
-    private childSessions: vscode.DebugSession[] = [];
+    private childSessions: {[key: string]: vscode.DebugSession} = {};
 
     constructor(context: vscode.ExtensionContext, session: vscode.DebugSession) {
         super();
 
         this.session = session;
         context.subscriptions.push(vscode.debug.onDidStartDebugSession(this.onDidStartDebugSession));
+        context.subscriptions.push(vscode.debug.onDidTerminateDebugSession(this.onDidTerminateDebugSession));
     }
 
     private onDidStartDebugSession = (debugSession: vscode.DebugSession) => {
         if (debugSession.parentSession?.id === this.session.id) {
-            this.childSessions.push(debugSession);
+            this.childSessions[debugSession.id] = debugSession;
+        }
+    };
+
+    private onDidTerminateDebugSession = (debugSession: vscode.DebugSession) => {
+        if (debugSession.id in this.childSessions) {
+            delete this.childSessions[debugSession.id];
+        }
+
+        // Terminate debug session if no child sessions are active
+        if (!Object.keys(this.childSessions).length) {
+            this.sendEvent(new debugadapter.TerminatedEvent());
         }
     };
 
@@ -110,7 +122,7 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
     }
 
     protected async disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments, request?: DebugProtocol.Request | undefined): Promise<void> {
-        await Promise.all(this.childSessions.map(async (s) => await vscode.debug.stopDebugging(s)));
+        await Promise.all(Object.values(this.childSessions).map(async (s) => await vscode.debug.stopDebugging(s)));
 
         this.sendResponse(response);
     }
