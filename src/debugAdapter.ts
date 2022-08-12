@@ -45,6 +45,10 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
         }
     };
 
+    private consoleLog(message: string) {
+        this.sendEvent(new debugadapter.OutputEvent(`${message}\n`, "console"));
+    }
+
     private prepareNativeDebugConfiguration(config: vscode.DebugConfiguration, pid: string) {
         let lldbConfig: vscode.DebugConfiguration = {
             "type": "lldb",
@@ -99,6 +103,7 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
 
         let lldbSuccess = !lldbEnabled;
         if (lldbEnabled) {
+            this.consoleLog("Starting Native debugger");
             let lldbConfig = this.prepareNativeDebugConfiguration(config, pid);
 
             lldbSuccess = await vscode.debug.startDebugging(this.session.workspaceFolder, lldbConfig, {
@@ -108,6 +113,7 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
 
         let javaSuccess = !javaEnabled;
         if (javaEnabled && lldbSuccess) {
+            this.consoleLog("Starting Java debugger");
             let javaConfig = this.prepareJavaDebugConfiguration(config, pid);
 
             javaSuccess = await vscode.debug.startDebugging(this.session.workspaceFolder, javaConfig, {
@@ -119,6 +125,13 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
 
         if (!response.success) {
             response.message = !lldbSuccess ? "Could not start native debugger" : !javaSuccess ? "Could not start java debugger" : "Could not start android debugger";
+        }
+
+        if (response.success) {
+            this.consoleLog(`Attached to process ${pid}`);
+        }
+        else {
+            this.consoleLog(`Error: ${response.message}`);
         }
     }
 
@@ -134,7 +147,10 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
 
         try {
             // Try launching the app
+            this.consoleLog(`Launching the app activity ${config.packageName}/${config.launchActivity}`);
             await android.launchApp(target, config.packageName, config.launchActivity);
+
+            this.consoleLog(`Getting pid for the launched app`);
 
             // Wait for some time before trying to get pid
             await new Promise((resolve, reject) => setTimeout(resolve, 1000));
@@ -145,6 +161,9 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
 
             if (!process?.pid) {
                 throw new Error("Could not get pid for the app. Please ensure that the app is launched correctly.");
+            }
+            else {
+                this.consoleLog(`Attaching to process ${process.pid} (${process.name})`);
             }
 
             await this.attachToProcess(process.pid, response);
@@ -160,6 +179,7 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
     protected async disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments, request?: DebugProtocol.Request | undefined): Promise<void> {
         await Promise.all(Object.values(this.childSessions).map(async (s) => await vscode.debug.stopDebugging(s)));
 
+        this.consoleLog("Debugger detached");
         this.sendResponse(response);
     }
 }
