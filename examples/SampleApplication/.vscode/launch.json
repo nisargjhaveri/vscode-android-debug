@@ -2,26 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Attach Sample App",
-            "type": "lldb",
-            "request": "attach",
-            "pid": "${command:pickAndroidProcess}",
-            "androidPackageName": "com.example.sampleapplication",
-            "androidTarget": "select",
-            "symbolSearchPaths": [
-                "${workspaceFolder}/app/build/intermediates/cmake/debug/obj/${command:abi}/",
-            ],
-        },
-        {
-            "name": "Java Attach",
-            "type": "java",
-            "request": "attach",
-            "processId": "${command:pickAndroidProcess}",
-            "androidTarget": "select",
-            "sourcePaths": ["${workspaceFolder}/app/src/main/java"]
-        },
-        {
-            "name": "Android",
+            "name": "Android Attach",
             "type": "android-debug",
             "request": "attach",
             "pid": "${command:pickAndroidProcess}",
@@ -36,6 +17,42 @@
             "java": {
                 "sourcePaths": ["${workspaceFolder}/app/src/main/java"]
             }
-        }
+        },
+        {
+            "name": "Android Launch",
+            "type": "android-debug",
+            "request": "launch",
+            "target": "select",
+            "mode": "dual",
+            "packageName": "com.example.sampleapplication",
+            "launchActivity": ".MainActivity",
+            "native": {
+                "symbolSearchPaths": [
+                    "${workspaceFolder}/app/build/intermediates/cmake/debug/obj/${command:abi}/",
+                ],
+            },
+            "java": {
+                "sourcePaths": ["${workspaceFolder}/app/src/main/java"]
+            }
+        },
+        {
+            "name": "Advanced Native Attach",
+            "type": "lldb",
+            "request": "attach",
+            "pid": "${command:pickAndroidProcess}",
+            "androidPackageName": "com.example.sampleapplication",
+            "androidTarget": "select",
+            "symbolSearchPaths": [
+                "${workspaceFolder}/app/build/intermediates/cmake/debug/obj/${command:abi}/",
+            ],
+        },
+        {
+            "name": "Advanced Java Attach",
+            "type": "java",
+            "request": "attach",
+            "processId": "${command:pickAndroidProcess}",
+            "androidTarget": "select",
+            "sourcePaths": ["${workspaceFolder}/app/src/main/java"]
+        },
     ]
 }

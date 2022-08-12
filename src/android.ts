@@ -5,7 +5,7 @@ import * as fsPromises from 'fs/promises';
 import * as ini from 'ini';
 import * as teen_process from 'teen_process';
 
-import { ADB, BinaryName, Device, VerboseDevice } from 'appium-adb';
+import { ADB, BinaryName, Device, VerboseDevice, ShellExecOptions } from 'appium-adb';
 
 import * as logger from './logger';
 import * as utils from './utils';
@@ -19,6 +19,7 @@ export async function handlePathsUpdated() {
     forceRecreateAdb = true;
 }
 
+// ADB helpers
 export async function getAdb() {
     if (!adb || forceRecreateAdb) {
         adb = await ADB.createADB({sdkRoot: androidPaths.requireSdkRoot()});
@@ -35,6 +36,7 @@ export async function getDeviceAdb(device: Device) {
     return deviceAdb;
 }
 
+// Connected device information
 export async function getDeviceFromUDID(udid: string): Promise<VerboseDevice> {
     let adb = await getAdb();
 
@@ -97,6 +99,7 @@ export async function getBestAbi(device: Device, abiSupportedList: string[]) {
     throw new Error("Cannot find appropriate ABI to use");
 }
 
+// LLDB server
 async function getLldbServer(abi: string): Promise<string> {
     try {
         let platform = os.platform();
@@ -153,6 +156,7 @@ export async function startLldbServer(device: Device, packageName: string, abi: 
     };
 }
 
+// Process information
 export async function getProcessList(device: Device, populatePackageNames: boolean = false) {
     let deviceAdb = await getDeviceAdb(device);
 
@@ -224,6 +228,7 @@ async function getPackagesForProcess(deviceAdb: ADB, pid: string) {
     return packages;
 }
 
+// JDWP Port forwarding
 export async function forwardJdwpPort(device: Device, pid: string) {
     let deviceAdb = await getDeviceAdb(device);
     return await deviceAdb.adbExec(["forward", `tcp:0`, `jdwp:${pid}`]);
@@ -234,6 +239,7 @@ export async function removeTcpForward(device: Device, port: string) {
     return await deviceAdb.removePortForward(port);
 }
 
+// AVD helpers
 export async function getAvdDisplayName(avdName: string) {
     let displayName: string|undefined = undefined;
 
@@ -283,4 +289,23 @@ export async function launchAVD(avdName: string) {
         return getDeviceFromUDID(adb.curDeviceId);
     }
     throw new Error("Could not launch Android Virtual Device");
+}
+
+// Application launch
+export async function launchApp(device: Device, packageName: string, launchActivity: string) {
+    let deviceAdb = await getDeviceAdb(device);
+
+    let launchCmd = `am start -D -a android.intent.action.MAIN -c android.intent.category.LAUNCHER ${packageName}/${launchActivity}`;
+
+    let {stdout, stderr} = await deviceAdb.shell(launchCmd, {outputFormat: deviceAdb.EXEC_OUTPUT_FORMAT.FULL} as ShellExecOptions) as any as {stdout: string, stderr: string};
+
+    // The error handling is inspired from from appium-adb's startApp method
+    if (stderr.includes('Error: Activity class') && stderr.includes('does not exist')) {
+        throw new Error(`Activity used to start the app doesn't exist or cannot be launched. Make sure it exists and is a launchable activity.`);
+    } else if (stderr.includes('Error: Intent does not match any activities') || stderr.includes('Error: Activity not started, unable to resolve Intent')) {
+        throw new Error(`Activity for intent used to start the app doesn't exist or cannot be launched. Make sure it exists and is a launchable activity.`);
+    } else if (stderr.includes('java.lang.SecurityException')) {
+        // if the app is disabled on a real device it will throw a security exception
+        throw new Error(`The permission to start activity has been denied. Make sure the activity/package names are correct.`);
+    }
 }

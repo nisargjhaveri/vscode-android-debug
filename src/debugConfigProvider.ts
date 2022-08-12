@@ -134,7 +134,7 @@ export class AndroidDebugConfigurationProvider implements vscode.DebugConfigurat
     async resolveDebugConfiguration(folder: vscode.WorkspaceFolder|undefined, dbgConfig: vscode.DebugConfiguration, token: vscode.CancellationToken) {
         logger.log("android resolveDebugConfiguration", dbgConfig);
 
-        if (dbgConfig.request !== "attach") { return null; }
+        if (dbgConfig.request !== "attach" && dbgConfig.request !== "launch") { return null; }
 
         let target: Device|undefined = await getTarget(dbgConfig.target ?? "select");
         if (!target) { return null; }
@@ -157,7 +157,13 @@ export class AndroidDebugConfigurationProvider implements vscode.DebugConfigurat
 
         dbgConfig.mode = dbgConfig.mode ?? "native";
 
-        dbgConfig.packageName = dbgConfig.packageName ?? await targetCommand.getPackageNameForPid({device: target, pid: dbgConfig.pid});
+        if (dbgConfig.request === "attach") {
+            // Resolve for attach
+            dbgConfig.packageName = dbgConfig.packageName ?? await targetCommand.getPackageNameForPid({device: target, pid: dbgConfig.pid});
+        }
+        else {
+            // Resolve for launch
+        }
 
         if (dbgConfig.mode === "native" || dbgConfig.mode === "dual") {
             dbgConfig.native = dbgConfig.native ?? {};

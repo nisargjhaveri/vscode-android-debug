@@ -2,6 +2,9 @@ import * as vscode from 'vscode';
 import * as debugadapter from '@vscode/debugadapter';
 import { DebugProtocol } from '@vscode/debugprotocol';
 
+import * as android from './android';
+import { Device } from './commonTypes';
+
 export class DebugAdapterDescriptorFactory implements vscode.DebugAdapterDescriptorFactory  {
     private context: vscode.ExtensionContext;
     constructor(context: vscode.ExtensionContext) {
@@ -42,12 +45,12 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
         }
     };
 
-    private prepareNativeDebugConfiguration(config: vscode.DebugConfiguration) {
+    private prepareNativeDebugConfiguration(config: vscode.DebugConfiguration, pid: string) {
         let lldbConfig: vscode.DebugConfiguration = {
             "type": "lldb",
             "name": "Native",
             "request": "attach",
-            "pid": config.pid,
+            "pid": pid,
             "androidTarget": config.target.udid,
             "androidAbi": config.native.abi,
             "androidPackageName": config.packageName,
@@ -66,12 +69,12 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
         return lldbConfig;
     }
 
-    private prepareJavaDebugConfiguration(config: vscode.DebugConfiguration) {
+    private prepareJavaDebugConfiguration(config: vscode.DebugConfiguration, pid: string) {
         let javaConfig: vscode.DebugConfiguration = {
             "type": "java",
             "name": "Java",
             "request": "attach",
-            "processId": config.pid,
+            "processId": pid,
             "androidTarget": config.target.udid,
         };
 
@@ -88,7 +91,7 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
         return javaConfig;
     }
 
-    protected async attachRequest(response: DebugProtocol.AttachResponse, args: DebugProtocol.AttachRequestArguments, request?: DebugProtocol.Request | undefined): Promise<void> {
+    private async attachToProcess(pid: string, response: DebugProtocol.Response) {
         let config = this.session.configuration;
 
         let lldbEnabled = config.mode === "dual" || config.mode === "native";
@@ -96,7 +99,7 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
 
         let lldbSuccess = !lldbEnabled;
         if (lldbEnabled) {
-            let lldbConfig = this.prepareNativeDebugConfiguration(config);
+            let lldbConfig = this.prepareNativeDebugConfiguration(config, pid);
 
             lldbSuccess = await vscode.debug.startDebugging(this.session.workspaceFolder, lldbConfig, {
                 parentSession: this.session
@@ -105,7 +108,7 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
 
         let javaSuccess = !javaEnabled;
         if (javaEnabled && lldbSuccess) {
-            let javaConfig = this.prepareJavaDebugConfiguration(config);
+            let javaConfig = this.prepareJavaDebugConfiguration(config, pid);
 
             javaSuccess = await vscode.debug.startDebugging(this.session.workspaceFolder, javaConfig, {
                 parentSession: this.session
@@ -116,6 +119,39 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
 
         if (!response.success) {
             response.message = !lldbSuccess ? "Could not start native debugger" : !javaSuccess ? "Could not start java debugger" : "Could not start android debugger";
+        }
+    }
+
+    protected async attachRequest(response: DebugProtocol.AttachResponse, args: DebugProtocol.AttachRequestArguments, request?: DebugProtocol.Request | undefined): Promise<void> {
+        await this.attachToProcess(this.session.configuration.pid, response);
+        this.sendResponse(response);
+    }
+
+    protected async launchRequest(response: DebugProtocol.LaunchResponse, args: DebugProtocol.LaunchRequestArguments, request?: DebugProtocol.Request | undefined): Promise<void> {
+        let config = this.session.configuration;
+
+        let target: Device = config.target;
+
+        try {
+            // Try launching the app
+            await android.launchApp(target, config.packageName, config.launchActivity);
+
+            // Wait for some time before trying to get pid
+            await new Promise((resolve, reject) => setTimeout(resolve, 1000));
+
+            // Get last pid from jdwp
+            let processList = await android.getProcessList(target, false);
+            let process = processList.length ? processList[processList.length - 1] : undefined;
+
+            if (!process?.pid) {
+                throw new Error("Could not get pid for the app. Please ensure that the app is launched correctly.");
+            }
+
+            await this.attachToProcess(process.pid, response);
+        }
+        catch (e: any) {
+            response.success = false;
+            response.message = `Error launching: ${e.message}`;
         }
 
         this.sendResponse(response);
