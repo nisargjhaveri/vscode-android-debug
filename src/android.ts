@@ -11,6 +11,7 @@ import * as logger from './logger';
 import * as utils from './utils';
 
 import * as androidPaths from './androidPaths';
+import { JDWP } from './jdwp';
 
 let adb: ADB;
 let forceRecreateAdb = false;
@@ -231,12 +232,33 @@ async function getPackagesForProcess(deviceAdb: ADB, pid: string) {
 // JDWP Port forwarding
 export async function forwardJdwpPort(device: Device, pid: string) {
     let deviceAdb = await getDeviceAdb(device);
-    return await deviceAdb.adbExec(["forward", `tcp:0`, `jdwp:${pid}`]);
+    return await deviceAdb.adbExec(["forward", `tcp:0`, `jdwp:${pid}`]) as any as string;
 }
 
 export async function removeTcpForward(device: Device, port: string) {
     let deviceAdb = await getDeviceAdb(device);
     return await deviceAdb.removePortForward(port);
+}
+
+export async function resumeJavaDebugger(device: Device, pid: string): Promise<() => Promise<void>>  {
+    let port = await forwardJdwpPort(device, pid);
+    let jdwp = new JDWP(Number(port), "localhost");
+
+    let cleanup = async () => {
+        jdwp.disconnect();
+        removeTcpForward(device, port);
+    };
+
+    try {
+        await jdwp.connect();
+        await jdwp.resume();
+
+        return cleanup;
+    }
+    catch (e) {
+        cleanup();
+        throw e;
+    }
 }
 
 // AVD helpers

@@ -160,9 +160,11 @@ export class AndroidDebugConfigurationProvider implements vscode.DebugConfigurat
         if (dbgConfig.request === "attach") {
             // Resolve for attach
             dbgConfig.packageName = dbgConfig.packageName ?? await targetCommand.getPackageNameForPid({device: target, pid: dbgConfig.pid});
+            dbgConfig.resumeProcess = dbgConfig.mode === "native" ? (dbgConfig.resumeProcess ?? false) : false;
         }
         else {
             // Resolve for launch
+            dbgConfig.resumeProcess = dbgConfig.mode === "native" ? (dbgConfig.resumeProcess ?? true) : false;
         }
 
         if (dbgConfig.mode === "native" || dbgConfig.mode === "dual") {

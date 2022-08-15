@@ -19,6 +19,7 @@ export class DebugAdapterDescriptorFactory implements vscode.DebugAdapterDescrip
 class DebugAdapter extends debugadapter.LoggingDebugSession {
     private session: vscode.DebugSession;
     private childSessions: {[key: string]: vscode.DebugSession} = {};
+    private jdwpCleanup: (() => Promise<void>)|undefined;
 
     constructor(context: vscode.ExtensionContext, session: vscode.DebugSession) {
         super();
@@ -135,8 +136,29 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
         }
     }
 
+    private async resumeProcess(pid: string) {
+        let config = this.session.configuration;
+
+        if (config.resumeProcess) {
+            try {
+                this.consoleLog(`Resuming process by attaching Java debugger`);
+                this.jdwpCleanup = await android.resumeJavaDebugger(config.target, pid);
+            }
+            catch (e: any) {
+                this.consoleLog(`Error resuming process: ${e.message}`);
+            }
+        }
+    }
+
     protected async attachRequest(response: DebugProtocol.AttachResponse, args: DebugProtocol.AttachRequestArguments, request?: DebugProtocol.Request | undefined): Promise<void> {
-        await this.attachToProcess(this.session.configuration.pid, response);
+        let pid = this.session.configuration.pid;
+
+        // Attach to process
+        await this.attachToProcess(pid, response);
+
+        // Resume process if applicable
+        await this.resumeProcess(pid);
+
         this.sendResponse(response);
     }
 
@@ -166,7 +188,11 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
                 this.consoleLog(`Attaching to process ${process.pid} (${process.name})`);
             }
 
+            // Attach to the process
             await this.attachToProcess(process.pid, response);
+
+            // Resume process if applicable
+            await this.resumeProcess(process.pid);
         }
         catch (e: any) {
             response.success = false;
@@ -178,6 +204,11 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
 
     protected async disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments, request?: DebugProtocol.Request | undefined): Promise<void> {
         await Promise.all(Object.values(this.childSessions).map(async (s) => await vscode.debug.stopDebugging(s)));
+
+        if (this.jdwpCleanup) {
+            await this.jdwpCleanup();
+            this.jdwpCleanup = undefined;
+        }
 
         this.consoleLog("Debugger detached");
         this.sendResponse(response);

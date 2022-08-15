@@ -206,6 +206,11 @@
                                 ],
                                 "default": "native"
                             },
+                            "resumeProcess": {
+                                "description": "Resume the process in case it is waiting for debugger. Only applicable in 'native' mode.",
+                                "type": "boolean",
+                                "default": false
+                            },
                             "native": {
                                 "description": "Configuration for native debugger.",
                                 "type": "object",
@@ -323,6 +328,11 @@
                                     "dual"
                                 ],
                                 "default": "native"
+                            },
+                            "resumeProcess": {
+                                "description": "Resume the process in case it is waiting for debugger. Only applicable in 'native' mode.",
+                                "type": "boolean",
+                                "default": true
                             },
                             "native": {
                                 "description": "Configuration for native debugger.",
