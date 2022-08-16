@@ -2,6 +2,12 @@
 
 All notable changes to the "android-debug" extension will be documented in this file.
 
+## v0.0.5
+- Launch requests are now supported with `android-debug`.
+- Remove hard dependency on CodeLLDB.
+- Prompt to install required extensions whenever needed.
+- Miscellaneous improvements 
+
 ## v0.0.4
 ### Breaking Changes
 - The debugger type is now `android-debug` instead of `android`.
