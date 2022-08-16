@@ -447,8 +447,5 @@
         "appium-adb": "^9.10.1",
         "ini": "^3.0.0",
         "teen_process": "^1.16.0"
-    },
-    "extensionDependencies": [
-        "vadimcn.vscode-lldb"
-    ]
+    }
 }

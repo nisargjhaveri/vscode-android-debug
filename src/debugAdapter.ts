@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as debugadapter from '@vscode/debugadapter';
 import { DebugProtocol } from '@vscode/debugprotocol';
 
+import * as extensionDependencies from './extensionDependencies';
 import * as android from './android';
 import { Device } from './commonTypes';
 
@@ -101,6 +102,8 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
 
         let lldbEnabled = config.mode === "dual" || config.mode === "native";
         let javaEnabled = config.mode === "dual" || config.mode === "java";
+
+        extensionDependencies.ensureExtensions(lldbEnabled, javaEnabled);
 
         let lldbSuccess = !lldbEnabled;
         if (lldbEnabled) {
