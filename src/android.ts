@@ -66,7 +66,7 @@ export async function isDeviceConnected(udid: string): Promise<boolean> {
     return found.length > 0;
 }
 
-async function getDeviceAbiList(deviceAdb: ADB) {
+async function getDeviceAbiListInternal(deviceAdb: ADB) {
     let abilist = [];
 
     abilist.push(...(await deviceAdb.getDeviceProperty("ro.product.cpu.abilist")).split(","));
@@ -85,9 +85,13 @@ async function getDeviceAbiList(deviceAdb: ADB) {
     return abilist;
 }
 
+export async function getDeviceAbiList(device: Device) {
+    return await getDeviceAbiListInternal(await getDeviceAdb(device));
+}
+
 export async function getBestAbi(device: Device, abiSupportedList: string[]) {
     let deviceAdb = await getDeviceAdb(device);
-    let deviceAbiList = await getDeviceAbiList(deviceAdb);
+    let deviceAbiList = await getDeviceAbiListInternal(deviceAdb);
 
     abiSupportedList = abiSupportedList;
 

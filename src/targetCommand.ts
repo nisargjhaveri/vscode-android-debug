@@ -73,10 +73,24 @@ export async function getPackageNameForPid(args: {device: Device, pid: string}) 
     return undefined;
 }
 
-async function pickAppAbi(abiSupportedList: string[]) {
+async function pickAppAbi(abiSupportedList: string[], deviceAbiList: string[]) {
     let abiOptions = abiSupportedList.sort((a, b) => {
+        // Sort by last picked
         if (a === lastPickedAbi) { return -1; }
         if (b === lastPickedAbi) { return 1; }
+
+        // Sort by device ABIs
+        let indexA = deviceAbiList.indexOf(a);
+        if (indexA < 0) { indexA = Number.MAX_SAFE_INTEGER; }
+
+        let indexB = deviceAbiList.indexOf(b);
+        if (indexB < 0) { indexB = Number.MAX_SAFE_INTEGER; }
+
+        let result = indexA - indexB;
+
+        if (result !== 0) { return result; }
+
+        // Sort alphabatically
         return a.localeCompare(b);
     }).map((abi): vscode.QuickPickItem => ({
         label: abi,
@@ -158,7 +172,8 @@ export async function getBestAbi(args: {device: Device}) {
 
     if (currentAbi) {
         if (currentAbi === "select") {
-            let pickedAbi = await pickAppAbi(abiSupportedList);
+            let deviceAbiList = await android.getDeviceAbiList(device);
+            let pickedAbi = await pickAppAbi(abiSupportedList, deviceAbiList);
 
             if (pickedAbi) {
                 currentAbi = pickedAbi;
