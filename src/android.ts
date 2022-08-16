@@ -168,21 +168,31 @@ export async function getProcessList(device: Device, populatePackageNames: boole
     let subprocess = deviceAdb.createSubProcess(['jdwp']);
     subprocess.start();
 
-    let processList: {pid: string, name: string, packages: string[]}[] = [];
-    subprocess.on('lines-stdout', async (lines: string[]) => {
-        let processes = await Promise.all(
-            lines
-                .map((l) => l.trim())
-                .map(async (pid: string) => await getProcessInfoInternal(deviceAdb, pid, populatePackageNames))
-        );
+    let resolveWaitTimer: (v: void) => void;
+    let processWaitTimer = new Promise((resolve, reject) => { resolveWaitTimer = resolve; });
+    let timeout = setTimeout(resolveWaitTimer, 3000);
 
-        processList.push(...processes);
+    let processPromises: Promise<{pid: string, name: string, packages: string[]}>[] = [];
+    subprocess.on('lines-stdout', (lines: string[]) => {
+        // Clear timeout first if we have more output
+        clearTimeout(timeout);
+
+        // Get process info
+        let processes = lines
+                            .map((l) => l.trim())
+                            .map((pid: string) => getProcessInfoInternal(deviceAdb, pid, populatePackageNames));
+
+        processPromises.push(...processes);
+
+        // Wait for 200 ms for more output, if any
+        timeout = setTimeout(resolveWaitTimer, 200);
     });
 
-    // Wait for two seconds
-    await new Promise((resolve, reject) => setTimeout(resolve, 2000));
+    await processWaitTimer;
 
     await subprocess.stop();
+
+    let processList = await Promise.all(processPromises);
 
     logger.log("getProcessList", processList);
 
