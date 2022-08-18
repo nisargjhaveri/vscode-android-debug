@@ -170,6 +170,7 @@ export async function getProcessList(device: Device, populatePackageNames: boole
 
     let resolveWaitTimer: (v: void) => void;
     let processWaitTimer = new Promise((resolve, reject) => { resolveWaitTimer = resolve; });
+    // @ts-ignore
     let timeout = setTimeout(resolveWaitTimer, 3000);
 
     let processPromises: Promise<{pid: string, name: string, packages: string[]}>[] = [];
