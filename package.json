@@ -29,6 +29,46 @@
                 "android-debug.ndkRoot": {
                     "type": "string",
                     "description": "ndk root"
+                },
+                "android-debug.abiSupported": {
+                    "description": "List of ABIs supported by the app",
+                    "type": "array",
+                    "items": {
+                        "enum": [
+                            "armeabi",
+                            "armeabi-v7a",
+                            "arm64-v8a",
+                            "x86",
+                            "x86_64"
+                        ]
+                    },
+                    "default": [
+                        "armeabi-v7a",
+                        "arm64-v8a",
+                        "x86",
+                        "x86_64"
+                    ]
+                },
+                "android-debug.abiMap": {
+                    "description": "Map android ABI to custom strings, use with ${command:mappedAbi}.",
+                    "type": "object",
+                    "properties": {
+                        "armeabi": {
+                            "type": "string"
+                        },
+                        "armeabi-v7a": {
+                            "type": "string"
+                        },
+                        "arm64-v8a": {
+                            "type": "string"
+                        },
+                        "x86": {
+                            "type": "string"
+                        },
+                        "x86_64": {
+                            "type": "string"
+                        }
+                    }
                 }
             }
         },

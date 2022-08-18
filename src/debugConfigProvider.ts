@@ -32,6 +32,10 @@ export class LLDBDebugConfigurationProvider implements vscode.DebugConfiguration
 
         dbgConfig.androidTarget = target;
 
+        let config = vscode.workspace.getConfiguration("android-debug");
+        dbgConfig.androidAbiSupported = dbgConfig.androidAbiSupported ?? config.get("abiSupported");
+        dbgConfig.androidAbiMap = dbgConfig.androidAbiMap ?? config.get("abiMap");
+
         targetPicker.setCurrentTarget(target);
         targetCommand.setAbiResolutionInfo(dbgConfig.androidAbi, dbgConfig.androidAbiSupported, dbgConfig.androidAbiMap);
         targetCommand.setProcessPickerInfo(dbgConfig.androidPackageName);
@@ -141,8 +145,14 @@ export class AndroidDebugConfigurationProvider implements vscode.DebugConfigurat
 
         dbgConfig.target = target;
 
+        dbgConfig.native = dbgConfig.native ?? {};
+
+        let config = vscode.workspace.getConfiguration("android-debug");
+        dbgConfig.native.abiSupported = dbgConfig.native.abiSupported ?? config.get("abiSupported");
+        dbgConfig.native.abiMap = dbgConfig.native.abiMap ?? config.get("abiMap");
+
         targetPicker.setCurrentTarget(target);
-        targetCommand.setAbiResolutionInfo(dbgConfig.native?.abi, dbgConfig.native?.abiSupported, dbgConfig.native?.abiMap);
+        targetCommand.setAbiResolutionInfo(dbgConfig.native?.abi, dbgConfig.native.abiSupported, dbgConfig.native.abiMap);
         targetCommand.setProcessPickerInfo(dbgConfig.packageName);
 
         return dbgConfig;
@@ -168,7 +178,6 @@ export class AndroidDebugConfigurationProvider implements vscode.DebugConfigurat
         }
 
         if (dbgConfig.mode === "native" || dbgConfig.mode === "dual") {
-            dbgConfig.native = dbgConfig.native ?? {};
             dbgConfig.native.abi = await targetCommand.getBestAbi({device: target});
         }
 
