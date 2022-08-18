@@ -2,6 +2,11 @@
 
 All notable changes to the "android-debug" extension will be documented in this file.
 
+## v0.0.6
+- Add new `android-debug.abiSupported` and `android-debug.abiMap` config options to default to when not specified in launch config.
+- Faster process picker
+- Improve ABI picker by showing supported ABIs first
+
 ## v0.0.5
 - Launch requests are now supported with `android-debug`.
 - Remove hard dependency on CodeLLDB.
