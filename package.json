@@ -1,8 +1,8 @@
 {
     "name": "android-debug",
     "publisher": "nisargjhaveri",
-    "displayName": "Android Native Debug",
-    "description": "Android Native Debugging support in VS Code",
+    "displayName": "Android Debug",
+    "description": "Debug Android Apps in VS Code",
     "version": "0.0.5",
     "repository": "https://github.com/nisargjhaveri/vscode-android-debug",
     "engines": {
