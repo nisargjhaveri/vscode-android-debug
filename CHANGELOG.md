@@ -2,6 +2,9 @@
 
 All notable changes to the "android-debug" extension will be documented in this file.
 
+## v0.0.7
+- Support `ANDROID_NDK_ROOT` environment variable to specify ndk root
+
 ## v0.0.6
 - Add new `android-debug.abiSupported` and `android-debug.abiMap` config options to default to when not specified in launch config.
 - Faster process picker
