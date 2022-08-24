@@ -87,6 +87,11 @@ async function getNdkRoot(sdkRoot: string, customNdkRoot?: string): Promise<stri
         logger.warn("Specified ndk root is not valid. Trying other options.");
     }
 
+    let ndkRoot = process.env.ANDROID_NDK_ROOT;
+    if (ndkRoot && await isValidNdkRoot(ndkRoot)) {
+        return ndkRoot;
+    }
+
     let checkDirectoryAndContents = async (root: string) => {
         if (await isValidNdkRoot(root)) {
             return root;
@@ -105,7 +110,7 @@ async function getNdkRoot(sdkRoot: string, customNdkRoot?: string): Promise<stri
         }
     };
 
-    let ndkRoot = await checkDirectoryAndContents(path.resolve(sdkRoot, "ndk")) || await checkDirectoryAndContents(path.resolve(sdkRoot, "ndk-bundle"));
+    ndkRoot = await checkDirectoryAndContents(path.resolve(sdkRoot, "ndk")) || await checkDirectoryAndContents(path.resolve(sdkRoot, "ndk-bundle"));
 
     if (ndkRoot) {
         return ndkRoot;
