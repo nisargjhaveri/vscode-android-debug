@@ -2,6 +2,9 @@
 
 All notable changes to the "android-debug" extension will be documented in this file.
 
+## v0.0.8
+- Fix start lldb server phase, which was failing due to an incorrect path
+
 ## v0.0.7
 - Support `ANDROID_NDK_ROOT` environment variable to specify ndk root
 
