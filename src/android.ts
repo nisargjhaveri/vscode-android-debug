@@ -133,20 +133,24 @@ export async function startLldbServer(device: Device, packageName: string, abi: 
     }
 
     let deviceAdb = await getDeviceAdb(device);
-    let lldbServerPath = await getLldbServer(abi);
+    let lldbServerLocalPath = await getLldbServer(abi);
 
-    logger.log(`Using lldb-server at ${lldbServerPath}`);
+    logger.log(`Using lldb-server at ${lldbServerLocalPath}`);
 
-    await deviceAdb.push(lldbServerPath, "/data/local/tmp/android-debug/lldb-server");
-    await deviceAdb.shell(`run-as ${packageName} mkdir -p /data/data/${packageName}/android-debug/lldb/bin/`);
+    const lldbServerTmpPath = `/data/local/tmp/android-debug/lldb-server`;
+    const lldbServerDir = `/data/data/${packageName}/android-debug/lldb/bin`;
+    const lldbServerPath = `${lldbServerDir}/lldb-server`;
+
+    await deviceAdb.push(lldbServerLocalPath, lldbServerTmpPath);
+    await deviceAdb.shell(`run-as ${packageName} mkdir -p ${lldbServerDir}`);
 
     // Ignore failures if already exists
     try {
-        await deviceAdb.shell(`cat /data/local/tmp/lldb-server | run-as ${packageName} sh -c 'cat > /data/data/${packageName}/android-debug/lldb/bin/lldb-server && chmod 700 /data/data/${packageName}/android-debug/lldb/bin/lldb-server'`);
+        await deviceAdb.shell(`cat ${lldbServerTmpPath} | run-as ${packageName} sh -c 'cat > ${lldbServerPath} && chmod 700 ${lldbServerPath}'`);
     } catch {}
 
     let socket = `/${packageName}/platform-${utils.randomString(16)}.sock`;
-    let subprocess = deviceAdb.createSubProcess(['shell', `run-as ${packageName} /data/data/${packageName}/android-debug/lldb/bin/lldb-server platform --listen unix-abstract://${socket}`]);
+    let subprocess = deviceAdb.createSubProcess(['shell', `run-as ${packageName} ${lldbServerPath} platform --listen unix-abstract://${socket}`]);
     subprocess.start();
 
     subprocess.on('output', (stdout, stderr) => {
