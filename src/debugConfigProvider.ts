@@ -165,7 +165,7 @@ export class AndroidDebugConfigurationProvider implements vscode.DebugConfigurat
 
         let target: Device = dbgConfig.target;
 
-        dbgConfig.mode = dbgConfig.mode ?? "native";
+        dbgConfig.mode = dbgConfig.mode ?? "java";
 
         if (dbgConfig.request === "attach") {
             // Resolve for attach

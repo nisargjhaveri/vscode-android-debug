@@ -244,7 +244,7 @@
                                     "java",
                                     "dual"
                                 ],
-                                "default": "native"
+                                "default": "java"
                             },
                             "resumeProcess": {
                                 "description": "Resume the process in case it is waiting for debugger. Only applicable in 'native' mode.",
@@ -367,7 +367,7 @@
                                     "java",
                                     "dual"
                                 ],
-                                "default": "native"
+                                "default": "java"
                             },
                             "resumeProcess": {
                                 "description": "Resume the process in case it is waiting for debugger. Only applicable in 'native' mode.",

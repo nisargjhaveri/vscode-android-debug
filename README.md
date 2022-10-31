@@ -6,13 +6,10 @@ Debug Android apps in VS Code, with Native, Java or Dual debugging.
 
 # Features
 - Launch/Attach Android apps
-- Native, Java or Dual debugging.
+- Java, Native or Dual debugging.
 - Specify one or more locations to search for your so files, or source paths for Java.
 - Dynamic support for specifying and selecting ABIs to support various fat and split apk configurations.
 - Select from connected devices or start an existing emulator for debugging.
-
-# Limitations
-- While this extension supports Java debugging via [Debugger for Java by Microsoft](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug), the experience is not great yet. The debugging itself should work as expected, but the [Language Support for Java(TM) by Red Hat](https://marketplace.visualstudio.com/items?itemName=redhat.java) does not support Android projects very well.
 
 # Requirements
 - Android SDK to be installed along with platform-tools and optionally Android NDK for native code debugging. If you have these installed at custom locations, see [Configurations](#configurations).
@@ -26,7 +23,7 @@ Debug Android apps in VS Code, with Native, Java or Dual debugging.
 
 For a simple Android app with both Java and Native code, the following config should get you started. See [Launch Configuration Options](#launch-configuration-options) for more details.
 
-```json
+```jsonc
 {
     "version": "0.2.0",
     "configurations": [
@@ -78,7 +75,7 @@ Create a launch configuration in your `launch.json` file with `type: android-deb
 ## Launch Configuration Options
 Here are all the options supported with explanation and example values.
 
-```json
+```jsonc
 {
     // Set the name of the launch config.
     "name": "Android",
@@ -111,6 +108,7 @@ Here are all the options supported with explanation and example values.
     "launchActivity": ".MainActivity",
 
     // Mode for debugging. One of `java`, `native` or `dual`.
+    // Defaults to `java` if not specified.
     "mode": "dual",
 
     // Resume app process after attaching native debugger in case it is waiting for debugger by attaching a dummy Java debugger.
