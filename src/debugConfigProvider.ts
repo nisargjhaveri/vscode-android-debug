@@ -174,6 +174,7 @@ export class AndroidDebugConfigurationProvider implements vscode.DebugConfigurat
         }
         else {
             // Resolve for launch
+            dbgConfig.packageName = dbgConfig.packageName ?? await targetCommand.getPackageNameFromApk(dbgConfig.apkPath);
             dbgConfig.resumeProcess = dbgConfig.mode === "native" ? (dbgConfig.resumeProcess ?? true) : false;
         }
 

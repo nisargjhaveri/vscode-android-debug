@@ -351,6 +351,11 @@
                                 ],
                                 "default": "select"
                             },
+                            "apkPath": {
+                                "description": "The apk to install and debug",
+                                "type": "string",
+                                "default": "${workspaceFolder}/app/build/outputs/apk/debug/app-debug.apk"
+                            },
                             "packageName": {
                                 "description": "The package name of the app.",
                                 "type": "string"

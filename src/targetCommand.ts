@@ -73,6 +73,10 @@ export async function getPackageNameForPid(args: {device: Device, pid: string}) 
     return undefined;
 }
 
+export async function getPackageNameFromApk(apkPath: string) {
+    return await android.getPackageNameFromApk(apkPath);
+}
+
 async function pickAppAbi(abiSupportedList: string[], deviceAbiList: string[]) {
     let abiOptions = abiSupportedList.sort((a, b) => {
         // Sort by last picked

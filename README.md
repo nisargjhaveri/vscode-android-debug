@@ -97,8 +97,13 @@ Here are all the options supported with explanation and example values.
     // Required and only applicable for `attach` request.
     "pid": "${command:pickAndroidProcess}",
 
+    // Full path to the built APK.
+    // If available this apk will be installed first to the target device.
+    // At least one of `apkPath` or `packageName` is required for `launch` request.
+    "apkPath": "${workspaceFolder}/app/build/outputs/apk/debug/app-debug.apk",
+
     // Package name of your app.
-    // This is required for `launch` request or in case of native debugging.
+    // At least one of `apkPath` or `packageName` is required for `launch` request.
     "packageName": "com.example.sampleapplication",
 
     // Specify the activity you'd want to launch for debugging

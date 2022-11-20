@@ -171,7 +171,16 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
         let target: Device = config.target;
 
         try {
+            // Install the app if required
+            if (config.apkPath) {
+                this.consoleLog(`Installing ${config.apkPath}`);
+                await android.installApp(target, config.apkPath);
+            }
+
             // Try launching the app
+            if (!config.packageName) {
+                throw new Error("A valid package name is required.");
+            }
             this.consoleLog(`Launching the app activity ${config.packageName}/${config.launchActivity}`);
             await android.launchApp(target, config.packageName, config.launchActivity);
 

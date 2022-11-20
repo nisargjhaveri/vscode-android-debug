@@ -129,7 +129,7 @@ async function getLldbServer(abi: string): Promise<string> {
 
 export async function startLldbServer(device: Device, packageName: string, abi: string) {
     if (!packageName) {
-        throw new Error("Valid package name is required.");
+        throw new Error("A valid package name is required.");
     }
 
     let deviceAdb = await getDeviceAdb(device);
@@ -248,6 +248,18 @@ async function getPackagesForProcess(deviceAdb: ADB, pid: string) {
     return packages;
 }
 
+export async function getPackageNameFromApk(apkPath: string) {
+    if (!apkPath) {
+        return "";
+    }
+
+    let adb = await getAdb();
+
+    let appInfo = await adb.getApkInfo(apkPath);
+
+    return "name" in appInfo ? appInfo.name : "";
+}
+
 // JDWP Port forwarding
 export async function forwardJdwpPort(device: Device, pid: string) {
     let deviceAdb = await getDeviceAdb(device);
@@ -332,7 +344,13 @@ export async function launchAVD(avdName: string) {
     throw new Error("Could not launch Android Virtual Device");
 }
 
-// Application launch
+// Application install and launch
+export async function installApp(device: Device, apkPath: string) {
+    let deviceAdb = await getDeviceAdb(device);
+
+    return await deviceAdb.adbExec(["install", "-r", apkPath]);
+}
+
 export async function launchApp(device: Device, packageName: string, launchActivity: string) {
     let deviceAdb = await getDeviceAdb(device);
 
