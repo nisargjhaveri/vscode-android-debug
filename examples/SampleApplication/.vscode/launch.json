@@ -5,9 +5,11 @@
             "name": "Android Attach",
             "type": "android-debug",
             "request": "attach",
+
             "pid": "${command:pickAndroidProcess}",
             "target": "select",
             "mode": "dual",
+
             "packageName": "com.example.sampleapplication",
             "native": {
                 "symbolSearchPaths": [
@@ -22,10 +24,13 @@
             "name": "Android Launch",
             "type": "android-debug",
             "request": "launch",
+
             "target": "select",
             "mode": "dual",
-            "packageName": "com.example.sampleapplication",
+
+            "apkPath": "${workspaceFolder}/app/build/outputs/apk/debug/app-debug.apk",
             "launchActivity": ".MainActivity",
+
             "native": {
                 "symbolSearchPaths": [
                     "${workspaceFolder}/app/build/intermediates/cmake/debug/obj/${command:abi}/",
@@ -33,26 +38,9 @@
             },
             "java": {
                 "sourcePaths": ["${workspaceFolder}/app/src/main/java"]
-            }
-        },
-        {
-            "name": "Advanced Native Attach",
-            "type": "lldb",
-            "request": "attach",
-            "pid": "${command:pickAndroidProcess}",
-            "androidPackageName": "com.example.sampleapplication",
-            "androidTarget": "select",
-            "symbolSearchPaths": [
-                "${workspaceFolder}/app/build/intermediates/cmake/debug/obj/${command:abi}/",
-            ],
-        },
-        {
-            "name": "Advanced Java Attach",
-            "type": "java",
-            "request": "attach",
-            "processId": "${command:pickAndroidProcess}",
-            "androidTarget": "select",
-            "sourcePaths": ["${workspaceFolder}/app/src/main/java"]
-        },
+            },
+
+            "preLaunchTask": "Build Debug APK"
+        }
     ]
 }
