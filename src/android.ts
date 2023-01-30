@@ -348,7 +348,12 @@ export async function launchAVD(avdName: string) {
 export async function installApp(device: Device, apkPath: string) {
     let deviceAdb = await getDeviceAdb(device);
 
-    return await deviceAdb.adbExec(["install", "-r", apkPath]);
+    try {
+        await deviceAdb.adbExec(["install", "-r", apkPath]);
+    }
+    catch (e: any) {
+        throw new Error(e.stderr ?? e.message);
+    }
 }
 
 export async function launchApp(device: Device, packageName: string, launchActivity: string) {
