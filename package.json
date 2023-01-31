@@ -357,11 +357,11 @@
                                 "default": "${workspaceFolder}/app/build/outputs/apk/debug/app-debug.apk"
                             },
                             "packageName": {
-                                "description": "The package name of the app.",
+                                "description": "The package name of the app",
                                 "type": "string"
                             },
                             "launchActivity": {
-                                "description": "The package name of the app.",
+                                "description": "Activity to launch",
                                 "type": "string",
                                 "default": ".MainActivity"
                             },
