@@ -5,6 +5,6 @@ import com.example.sampleapplication.databinding.ActivityMainBinding;
 
 class ActivityHelper {
     static int getNumber(int a) {
-        return a + 42;
+        return a + 42 + new KotlinHelper().getKotlinNumber(a);
     }
 }
