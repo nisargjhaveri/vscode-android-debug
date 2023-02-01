@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-import * as logger from './logger';
+import { logger } from './logger';
 
 const LLDB_EXTENSION_ID = "vadimcn.vscode-lldb";
 const JAVA_EXTENSION_ID = "redhat.java";

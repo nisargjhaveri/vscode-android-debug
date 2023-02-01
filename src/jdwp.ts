@@ -1,6 +1,6 @@
 import * as net from 'net';
 
-import * as logger from './logger';
+import { logger } from './logger';
 import * as utils from './utils';
 
 export class JDWP {

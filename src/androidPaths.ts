@@ -3,7 +3,7 @@ import * as os from 'os';
 import * as path from 'path';
 import * as fsPromises from 'fs/promises';
 
-import * as logger from './logger';
+import { logger } from './logger';
 import * as android from './android';
 
 let sdkRoot: string|undefined;

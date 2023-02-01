@@ -2,7 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 
-import * as logger from './logger';
+import { logger } from './logger';
 import * as targetPicker from './targetPicker';
 import * as targetCommand from './targetCommand';
 import * as debugConfigProvider from './debugConfigProvider';
@@ -13,7 +13,6 @@ import * as androidPaths from './androidPaths';
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
-    logger.activate();
     logger.log('Activating extension "android-debug"');
 
     targetPicker.activate(context);

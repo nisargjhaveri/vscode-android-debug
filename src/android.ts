@@ -7,7 +7,7 @@ import * as teen_process from 'teen_process';
 
 import { ADB, BinaryName, Device, VerboseDevice, ShellExecOptions } from 'appium-adb';
 
-import * as logger from './logger';
+import { logger } from './logger';
 import * as utils from './utils';
 
 import * as androidPaths from './androidPaths';

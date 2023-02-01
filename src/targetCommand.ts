@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import * as logger from './logger';
+import { logger } from './logger';
 import * as android from './android';
 import { Device } from './commonTypes';
 import { getCurrentOrPickTarget } from './targetPicker';

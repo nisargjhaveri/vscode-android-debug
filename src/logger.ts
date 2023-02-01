@@ -1,54 +1,53 @@
 import * as vscode from 'vscode';
 
-let channel = {
-    appendLine: console.log
-};
+class OutputLogger {
+    private channel: vscode.OutputChannel = vscode.window.createOutputChannel("Android Debug");
 
-function getFormattedTime()
-{
-    let time = new Date();
-    return `${time.getFullYear()}-${time.getMonth()+1}-${time.getDate()} ${time.getHours()}:${time.getMinutes()}`;
-}
-
-function formatSingleMessage(message: any)
-{
-    if (typeof(message) === "undefined") {
-        return "undefined";
+    private getFormattedTime() {
+        let time = new Date();
+        return `${time.getFullYear()}-${time.getMonth()+1}-${time.getDate()} ${time.getHours()}:${time.getMinutes()}`;
     }
-    else if (message === null) {
-        return "null";
+
+    private formatSingleMessage(message: any) {
+        if (typeof(message) === "undefined") {
+            return "undefined";
+        }
+        else if (message === null) {
+            return "null";
+        }
+        else if (typeof message === "object") {
+            return JSON.stringify(message, undefined, 4);
+        }
+        else if (message.toString) {
+            return message.toString();
+        }
+        else {
+            return message;
+        }
     }
-    else if (typeof message === "object") {
-        return JSON.stringify(message, undefined, 4);
+
+    private format(severity: "ERROR"|"WARN"|"INFO"|"DEBUG", ...data: any[]) {
+        let message = data.map(this.formatSingleMessage).join(' ');
+
+        return `[${this.getFormattedTime()}] [${severity}] ${message}`;
     }
-    else if (message.toString) {
-        return message.toString();
+
+    log(...data: any[]): void {
+        this.info(...data);
+    }
+
+    debug(...data: any[]): void {
+        this.channel.appendLine(this.format("DEBUG", ...data));
+    }
+    info(...data: any[]): void {
+        this.channel.appendLine(this.format("INFO", ...data));
+    }
+    warn(...data: any[]): void {
+        this.channel.appendLine(this.format("WARN", ...data));
+    }
+    error(...data: any[]): void {
+        this.channel.appendLine(this.format("ERROR", ...data));
     }
 }
 
-function formatMessage(severity: "ERROR"|"WARN"|"INFO", messages: any[])
-{
-    let message = messages.map(formatSingleMessage).join(' ');
-
-    return `[${getFormattedTime()}] [${severity}] ${message}`;
-}
-
-export function activate()
-{
-    channel = vscode.window.createOutputChannel("Android Debug");
-}
-
-export function error(...args: any[])
-{
-    channel.appendLine(formatMessage("ERROR", args));
-}
-
-export function warn(...args: any[])
-{
-    channel.appendLine(formatMessage("WARN", args));
-}
-
-export function log(...args: any[])
-{
-    channel.appendLine(formatMessage("INFO", args));
-}
+export const logger = new OutputLogger();

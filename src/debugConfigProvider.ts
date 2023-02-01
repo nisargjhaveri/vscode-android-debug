@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import * as logger from './logger';
+import { logger } from './logger';
 import { Device } from './commonTypes';
 import * as targetCommand from './targetCommand';
 import * as targetPicker from './targetPicker';
