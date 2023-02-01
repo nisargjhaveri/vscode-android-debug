@@ -332,8 +332,15 @@
                     },
                     "launch": {
                         "required": [
-                            "packageName",
                             "launchActivity"
+                        ],
+                        "oneOf": [
+                            {
+                                "required": ["packageName"]
+                            },
+                            {
+                                "required": ["apkPath"]
+                            }
                         ],
                         "properties": {
                             "target": {
