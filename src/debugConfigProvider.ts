@@ -66,6 +66,10 @@ export class LLDBDebugConfigurationProvider implements vscode.DebugConfiguration
         dbgConfig.androidLldbServerSocket = socket;
 
         dbgConfig.initCommands = (dbgConfig.initCommands instanceof Array) ? dbgConfig.initCommands : [];
+        // Improve Android debugging by ignoring SIGSEGV signal, see https://issuetracker.google.com/issues/240007217#comment17
+        dbgConfig.initCommands.unshift(`process handle SIGSEGV --pass true --stop false --notify false`);
+        // Improve Android debugging by ignoring SIGQUIT signal which triggerd when ANR occurs
+        dbgConfig.initCommands.unshift(`process handle SIGQUIT --pass true --stop false --notify false`);
         dbgConfig.initCommands.unshift(`platform connect unix-abstract-connect://[${target.udid}]${socket}`);
         dbgConfig.initCommands.unshift(`platform select remote-android`);
 
