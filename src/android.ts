@@ -110,19 +110,31 @@ async function getLldbServer(abi: string): Promise<string> {
         let platform = os.platform();
 
         let llvmHostName = (platform === "win32") ? "windows-x86_64" : (platform === "darwin") ? "darwin-x86_64" : "linux-x86_64";
-        let llvmArch = abi.startsWith("armeabi") ? "arm" : (abi === "arm64-v8a") ? "aarch64": (abi === "x86") ? "i386" : "x86_64";
+        let llvmArch = abi.startsWith("armeabi") ? "arm" : (abi === "arm64-v8a") ? "aarch64" : (abi === "x86") ? "i386" : "x86_64";
 
         let llvmToolchainDir = path.normalize(`${androidPaths.requireNdkRoot()}/toolchains/llvm/prebuilt/${llvmHostName}`);
 
         let lldvPackageVersion = (await fsPromises.readFile(path.join(llvmToolchainDir, "AndroidVersion.txt"), "utf8")).split("\n")[0];
 
-        let lldbServerPath = path.normalize(`${llvmToolchainDir}/lib64/clang/${lldvPackageVersion}/lib/linux/${llvmArch}/lldb-server`);
+        const toolchainLibsPath = [
+            `lib64/clang/${lldvPackageVersion}`, // Old path for NDK <= 25
+            `lib/clang/${lldvPackageVersion}`,
+            `lib/clang/${lldvPackageVersion.split(".")[0]}`
+        ];
+        for (let toolchainLib of toolchainLibsPath) {
+            let lldbServerPath = path.normalize(`${llvmToolchainDir}/${toolchainLib}/lib/linux/${llvmArch}/lldb-server`);
 
-        await fsPromises.access(lldbServerPath, fs.constants.R_OK);
+            try {
+                await fsPromises.access(lldbServerPath, fs.constants.R_OK);
 
-        return lldbServerPath;
-    }
-    catch {
+                return lldbServerPath;
+            } catch {
+                // This path does not exist, try next
+            }
+        }
+
+        throw new Error("Could not locate lldb-server for the device");
+    } catch {
         throw new Error("Could not locate lldb-server for the device");
     }
 }
