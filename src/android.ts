@@ -361,10 +361,10 @@ export async function installApp(device: Device, apkPath: string) {
     let deviceAdb = await getDeviceAdb(device);
 
     try {
-        await deviceAdb.adbExec(["install", "-r", apkPath]);
+        await deviceAdb.install(apkPath, { "replace": true });
     }
     catch (e: any) {
-        throw new Error(e.stderr ?? e.message);
+        throw new Error("Installation of APK failed: " + (e.stderr ?? e.message));
     }
 }
 
