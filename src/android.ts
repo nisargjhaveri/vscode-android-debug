@@ -12,6 +12,8 @@ import * as utils from './utils';
 
 import * as androidPaths from './androidPaths';
 import { JDWP } from './jdwp';
+import Logcat from 'appium-adb/lib/logcat';
+import { printLogCat } from './extension';
 
 let adb: ADB;
 let forceRecreateAdb = false;
@@ -366,6 +368,116 @@ export async function installApp(device: Device, apkPath: string) {
     catch (e: any) {
         throw new Error("Installation of APK failed: " + (e.stderr ?? e.message));
     }
+}
+
+// Definition of different logcat severity levels
+enum LogCatSeverity {
+    unknown = 0,
+    default = 1,
+    verbose = 2,
+    debug = 3,
+    info = 4,
+    warning = 5,
+    error = 6,
+    fatal = 7,
+    silent = 8
+}
+
+// Parse a logcat severity into the enum
+function parseLogCatSeverity(s: String): LogCatSeverity {
+  switch(s)
+  {
+      case 'V': return LogCatSeverity.verbose;
+      case 'D': return LogCatSeverity.debug;
+      case 'I': return LogCatSeverity.info;
+      case 'W': return LogCatSeverity.warning;
+      case 'E': return LogCatSeverity.error;
+      case 'F': return LogCatSeverity.fatal;
+      case 'S': return LogCatSeverity.silent;
+      default: return LogCatSeverity.default;
+  }
+}
+
+// Map severity to names shown in the log
+function formatLogCatSeverity(severity: LogCatSeverity): string {
+  switch(severity)
+  {
+      case LogCatSeverity.verbose: return "verbose";
+      case LogCatSeverity.debug:   return "debug";
+      case LogCatSeverity.info:    return "info";
+      case LogCatSeverity.warning: return "warning";
+      case LogCatSeverity.error:   return "error";
+      case LogCatSeverity.fatal:   return "fatal";
+      default:                     return "verbose";
+  }
+}
+
+// Parse a log cat message line into a json object
+function parseLogCatEntry(str: String) {
+    // Split the string into
+    let array = str.split(' ').filter(Boolean);
+    array.length = 5;
+
+    let currentDate = new Date();
+    let date = new Date(Date.parse(array[0] + " " + array[1]));
+    date.setFullYear(currentDate.getFullYear());
+
+    let pid = array[2];
+    let tid = array[3];
+
+    let severity = parseLogCatSeverity(array[4]);
+
+    let tagMessage = str.substring(array.join(' ').length + 1);
+    let index = tagMessage.indexOf(':');
+
+    let tag = tagMessage.substring(0, index).trim();
+    let message = tagMessage.substring(index+1).trim();
+
+    return {
+      date: date,
+      pid: pid,
+      tid: tid,
+      severity: severity,
+      tag: tag,
+      message: message
+    };
+}
+
+// Format integer to have a fixed padding
+function formatInt(v: number, numDigits: number): string
+{
+  return v.toString().padStart(numDigits, '0');
+}
+
+// Format date for android logcat output
+function formatDate(date: Date): string
+{
+  let dateStr =  `${formatInt(date.getFullYear(), 4)}-${formatInt(date.getMonth() + 1, 2)}-${formatInt(date.getDate(), 2)}`;
+  let timeStr =  `${formatInt(date.getHours(), 2)}:${formatInt(date.getMinutes(), 2)}:${formatInt(date.getSeconds(), 2)}.${formatInt(date.getMilliseconds(), 3)}`;
+
+  return `${dateStr} ${timeStr}`;
+}
+
+// Attach logcat output
+export async function captureLogCat(pid: string) {
+    let adb = await getAdb();
+
+    let logCat = new Logcat({adb: adb.executable});
+
+    logCat.on('output', function (output)
+    {
+        let entry = parseLogCatEntry(output.message);
+        if(entry.pid === pid)
+        {
+            let formattedDate = formatDate(entry.date);
+            let name = formatLogCatSeverity(entry.severity);
+            printLogCat(formattedDate + " [" + name + "] " + entry.tag + ": " + entry.message);
+        }
+    });
+
+    logCat.startCapture();
+
+    return logCat;
 }
 
 export async function launchApp(device: Device, packageName: string, launchActivity: string) {

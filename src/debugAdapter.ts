@@ -5,6 +5,8 @@ import { DebugProtocol } from '@vscode/debugprotocol';
 import * as extensionDependencies from './extensionDependencies';
 import * as android from './android';
 import { Device } from './commonTypes';
+import { showLogCat } from './extension';
+import Logcat from 'appium-adb/lib/logcat';
 
 export class DebugAdapterDescriptorFactory implements vscode.DebugAdapterDescriptorFactory  {
     private context: vscode.ExtensionContext;
@@ -21,6 +23,7 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
     private session: vscode.DebugSession;
     private childSessions: {[key: string]: vscode.DebugSession} = {};
     private jdwpCleanup: (() => Promise<void>)|undefined;
+    private logCat: Logcat|null = null;
 
     constructor(context: vscode.ExtensionContext, session: vscode.DebugSession) {
         super();
@@ -100,6 +103,12 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
     private async attachToProcess(pid: string, response: DebugProtocol.Response) {
         let config = this.session.configuration;
 
+        // Start capture of logcat, if enabled
+        if(config.captureLogcat) {
+          this.consoleLog("Starting logcat capture");
+          this.logCat = await android.captureLogCat(pid);
+        }
+
         let lldbEnabled = config.mode === "dual" || config.mode === "native";
         let javaEnabled = config.mode === "dual" || config.mode === "java";
 
@@ -137,6 +146,11 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
         else {
             this.consoleLog(`Error: ${response.message}`);
         }
+
+        // Bring the logcat window to front
+        if(config.captureLogcat) {
+            showLogCat();
+        }
     }
 
     private async resumeProcess(pid: string) {
@@ -167,7 +181,6 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
 
     protected async launchRequest(response: DebugProtocol.LaunchResponse, args: DebugProtocol.LaunchRequestArguments, request?: DebugProtocol.Request | undefined): Promise<void> {
         let config = this.session.configuration;
-
         let target: Device = config.target;
 
         try {
@@ -181,6 +194,7 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
             if (!config.packageName) {
                 throw new Error("A valid package name is required.");
             }
+
             this.consoleLog(`Launching the app activity ${config.packageName}/${config.launchActivity}`);
             await android.launchApp(target, config.packageName, config.launchActivity);
 
@@ -220,6 +234,13 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
         if (this.jdwpCleanup) {
             await this.jdwpCleanup();
             this.jdwpCleanup = undefined;
+        }
+
+        if(this.logCat !== null)
+        {
+          this.consoleLog(`Stopping logcat capture`);
+          this.logCat.stopCapture();
+          this.logCat = null;
         }
 
         this.consoleLog("Debugger detached");
