@@ -459,8 +459,8 @@ function formatDate(date: Date): string
 }
 
 // Attach logcat output
-export async function captureLogCat(pid: string) {
-    let adb = await getAdb();
+export async function captureLogCat(device: Device, pid: string) {
+    let adb = await getDeviceAdb(device);
 
     let logCat = new Logcat({adb: adb.executable});
 

@@ -7,6 +7,7 @@ import * as android from './android';
 import { Device } from './commonTypes';
 import { showLogcat, clearLogcat } from './extension';
 import Logcat from 'appium-adb/lib/logcat';
+import { config } from 'process';
 
 export class DebugAdapterDescriptorFactory implements vscode.DebugAdapterDescriptorFactory  {
     private context: vscode.ExtensionContext;
@@ -110,7 +111,7 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
           }
 
           this.consoleLog("Starting logcat capture");
-          this.logCat = await android.captureLogCat(pid);
+          this.logCat = await android.captureLogCat(config.target, pid);
         }
 
         let lldbEnabled = config.mode === "dual" || config.mode === "native";
