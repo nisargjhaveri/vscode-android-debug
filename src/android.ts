@@ -13,7 +13,7 @@ import * as utils from './utils';
 import * as androidPaths from './androidPaths';
 import { JDWP } from './jdwp';
 import Logcat from 'appium-adb/lib/logcat';
-import { printLogCat } from './extension';
+import { printLogcat } from './extension';
 
 let adb: ADB;
 let forceRecreateAdb = false;
@@ -471,7 +471,7 @@ export async function captureLogCat(pid: string) {
         {
             let formattedDate = formatDate(entry.date);
             let name = formatLogCatSeverity(entry.severity);
-            printLogCat(formattedDate + " [" + name + "] " + entry.tag + ": " + entry.message);
+            printLogcat(formattedDate + " [" + name + "] " + entry.tag + ": " + entry.message);
         }
     });
 

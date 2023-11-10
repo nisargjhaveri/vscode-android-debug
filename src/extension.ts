@@ -42,14 +42,21 @@ export async function activate(context: vscode.ExtensionContext) {
  *
  * @param content The content to be printed.
  */
-export const printLogCat = (content: string): void => {
+export const printLogcat = (content: string): void => {
   logCatOutput.appendLine(content);
 };
 
 /**
  * Switch to the logcat output window
  */
-export const showLogCat = (): void => {
+export const clearLogcat = (): void => {
+  logCatOutput.clear();
+};
+
+/**
+ * Switch to the logcat output window
+ */
+export const showLogcat = (): void => {
   logCatOutput.show(true);
 };
 

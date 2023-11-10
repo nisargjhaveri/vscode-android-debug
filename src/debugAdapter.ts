@@ -5,7 +5,7 @@ import { DebugProtocol } from '@vscode/debugprotocol';
 import * as extensionDependencies from './extensionDependencies';
 import * as android from './android';
 import { Device } from './commonTypes';
-import { showLogCat } from './extension';
+import { showLogcat, clearLogcat } from './extension';
 import Logcat from 'appium-adb/lib/logcat';
 
 export class DebugAdapterDescriptorFactory implements vscode.DebugAdapterDescriptorFactory  {
@@ -105,6 +105,10 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
 
         // Start capture of logcat, if enabled
         if(config.captureLogcat) {
+          if(config.clearLogcat) {
+            clearLogcat();
+          }
+
           this.consoleLog("Starting logcat capture");
           this.logCat = await android.captureLogCat(pid);
         }
@@ -149,7 +153,7 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
 
         // Bring the logcat window to front
         if(config.captureLogcat) {
-            showLogCat();
+            showLogcat();
         }
     }
 

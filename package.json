@@ -383,6 +383,11 @@
                               "type": "boolean",
                               "default": false
                             },
+                            "clearLogcat": {
+                              "description": "Clear logcat when application starts",
+                              "type": "boolean",
+                              "default": true
+                            },
                             "packageName": {
                                 "description": "The package name of the app",
                                 "type": "string"
