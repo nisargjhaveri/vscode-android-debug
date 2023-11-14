@@ -201,7 +201,14 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
             }
 
             this.consoleLog(`Launching the app activity ${config.packageName}/${config.launchActivity}`);
-            await android.launchApp(target, config.packageName, config.launchActivity);
+
+            let extra = {};
+            if("extra" in config)
+            {
+              extra = config.extra;
+            }
+
+            await android.launchApp(target, config.packageName, config.launchActivity, extra);
 
             this.consoleLog(`Getting pid for the launched app`);
 
@@ -234,6 +241,8 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
     }
 
     protected async disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments, request?: DebugProtocol.Request | undefined): Promise<void> {
+        let config = this.session.configuration;
+
         await Promise.all(Object.values(this.childSessions).map(async (s) => await vscode.debug.stopDebugging(s)));
 
         if (this.jdwpCleanup) {
@@ -247,6 +256,9 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
           this.logCat.stopCapture();
           this.logCat = null;
         }
+
+        this.consoleLog(`Killing app ${config.packageName}`);
+        await android.killApp(config.target, config.packageName);
 
         this.consoleLog("Debugger detached");
         this.sendResponse(response);
