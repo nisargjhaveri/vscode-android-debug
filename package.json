@@ -388,6 +388,10 @@
                               "type": "boolean",
                               "default": true
                             },
+                            "sync": {
+                              "description": "Sync a directory before debugging",
+                              "type": "array"
+                            },
                             "extra": {
                               "description": "Extra arguments to pass",
                               "type": "object"

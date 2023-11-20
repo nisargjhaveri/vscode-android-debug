@@ -25,7 +25,7 @@ export async function handlePathsUpdated() {
 // ADB helpers
 export async function getAdb() {
   if (!adb || forceRecreateAdb) {
-    adb = await ADB.createADB({ sdkRoot: androidPaths.requireSdkRoot() });
+    adb = await ADB.createADB({ sdkRoot: androidPaths.requireSdkRoot(), adbExecTimeout: 600000 });
     forceRecreateAdb = false;
   }
 
@@ -452,6 +452,22 @@ function formatDate(date: Date): string {
   let timeStr = `${formatInt(date.getHours(), 2)}:${formatInt(date.getMinutes(), 2)}:${formatInt(date.getSeconds(), 2)}.${formatInt(date.getMilliseconds(), 3)}`;
 
   return `${dateStr} ${timeStr}`;
+}
+
+// Create an empty directory on the device
+export async function createDirectory(device: Device, path: string) {
+  let deviceAdb = await getDeviceAdb(device);
+
+  await deviceAdb.shell(['mkdir', '-p', path]);
+  await deviceAdb.shell(['chmod', '777', path]);
+}
+
+// Sync a directory to the device
+export async function syncDirectory(device: Device, local: string, remote: string) {
+  await createDirectory(device, remote);
+
+  let deviceAdb = await getDeviceAdb(device);
+  await deviceAdb.adbExec(['push', '--sync', local, remote]);
 }
 
 // Attach logcat output
