@@ -66,8 +66,14 @@ export class LLDBDebugConfigurationProvider implements vscode.DebugConfiguration
         dbgConfig.androidLldbServerSocket = socket;
 
         dbgConfig.initCommands = (dbgConfig.initCommands instanceof Array) ? dbgConfig.initCommands : [];
-        // Improve Android debugging by ignoring SIGSEGV signal, see https://issuetracker.google.com/issues/240007217#comment17
-        dbgConfig.initCommands.unshift(`process handle SIGSEGV --pass true --stop false --notify false`);
+        if (dbgConfig.signals !== undefined) {
+            for (const signal of dbgConfig.signals) {
+                dbgConfig.initCommands.unshift(`process handle ${signal.name} --pass ${!!signal.pass} --stop ${!!signal.stop} --notify ${!!signal.notify}`);
+            }
+        } else {
+            // Improve Android debugging by ignoring SIGSEGV signal, see https://issuetracker.google.com/issues/240007217#comment17
+            dbgConfig.initCommands.unshift(`process handle SIGSEGV --pass true --stop false --notify false`);
+        }
         dbgConfig.initCommands.unshift(`platform connect unix-abstract-connect://[${target.udid}]${socket}`);
         dbgConfig.initCommands.unshift(`platform select remote-android`);
 
@@ -152,6 +158,7 @@ export class AndroidDebugConfigurationProvider implements vscode.DebugConfigurat
         let config = vscode.workspace.getConfiguration("android-debug");
         dbgConfig.native.abiSupported = dbgConfig.native.abiSupported ?? config.get("abiSupported");
         dbgConfig.native.abiMap = dbgConfig.native.abiMap ?? config.get("abiMap");
+        dbgConfig.native.signals = dbgConfig.native.signals ?? config.get("signals");
 
         targetPicker.setCurrentTarget(target);
         targetCommand.setAbiResolutionInfo(dbgConfig.native?.abi, dbgConfig.native.abiSupported, dbgConfig.native.abiMap);
