@@ -159,6 +159,36 @@
                                 "items": {
                                     "type": "string"
                                 }
+                            },
+                            "signals": {
+                                "description": "Signals configuration.",
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "pass": {
+                                            "type": "boolean",
+                                            "default": false
+                                        },
+                                        "stop": {
+                                            "type": "boolean",
+                                            "default": false
+                                        },
+                                        "notify": {
+                                            "type": "boolean",
+                                            "default": false
+                                        }
+                                    }
+                                },
+                                "default": [
+                                    {
+                                        "name": "SIGSEGV",
+                                        "pass": true
+                                    }
+                                ]
                             }
                         }
                     }
@@ -312,6 +342,36 @@
                                         "items": {
                                             "type": "string"
                                         }
+                                    },
+                                    "signals": {
+                                        "description": "Signals configuration.",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "pass": {
+                                                    "type": "boolean",
+                                                    "default": false
+                                                },
+                                                "stop": {
+                                                    "type": "boolean",
+                                                    "default": false
+                                                },
+                                                "notify": {
+                                                    "type": "boolean",
+                                                    "default": false
+                                                }
+                                            }
+                                        },
+                                        "default": [
+                                            {
+                                                "name": "SIGSEGV",
+                                                "pass": true
+                                            }
+                                        ]
                                     }
                                 }
                             },
@@ -451,6 +511,36 @@
                                         "items": {
                                             "type": "string"
                                         }
+                                    },
+                                    "signals": {
+                                        "description": "Signals configuration.",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "pass": {
+                                                    "type": "boolean",
+                                                    "default": false
+                                                },
+                                                "stop": {
+                                                    "type": "boolean",
+                                                    "default": false
+                                                },
+                                                "notify": {
+                                                    "type": "boolean",
+                                                    "default": false
+                                                }
+                                            }
+                                        },
+                                        "default": [
+                                            {
+                                                "name": "SIGSEGV",
+                                                "pass": true
+                                            }
+                                        ]
                                     }
                                 }
                             },
