@@ -3,7 +3,7 @@
     "publisher": "nisargjhaveri",
     "displayName": "Android Debug",
     "description": "Debug Android Apps in VS Code",
-    "version": "0.0.8",
+    "version": "0.0.9",
     "repository": "https://github.com/nisargjhaveri/vscode-android-debug",
     "engines": {
         "vscode": "^1.56.0"
@@ -336,10 +336,14 @@
                         ],
                         "oneOf": [
                             {
-                                "required": ["packageName"]
+                                "required": [
+                                    "packageName"
+                                ]
                             },
                             {
-                                "required": ["apkPath"]
+                                "required": [
+                                    "apkPath"
+                                ]
                             }
                         ],
                         "properties": {

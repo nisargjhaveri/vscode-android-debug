@@ -2,6 +2,12 @@
 
 All notable changes to the "android-debug" extension will be documented in this file.
 
+## v0.0.9
+- Breaking: `mode` now defaults to `java` instead of `native` if not specified.
+- Add option to install apk while by specifying `apkPath` option for `launch` requests.
+- Ignore SIGSEGV in native debugging to be compatible with Android Studio.
+- Fix lldb-server path in NDK 26.
+
 ## v0.0.8
 - Fix start lldb server phase, which was failing due to an incorrect path
 
