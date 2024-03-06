@@ -5,224 +5,276 @@ import { DebugProtocol } from '@vscode/debugprotocol';
 import * as extensionDependencies from './extensionDependencies';
 import * as android from './android';
 import { Device } from './commonTypes';
+import { showLogcat, clearLogcat } from './extension';
+import Logcat from 'appium-adb/lib/logcat';
+import { config } from 'process';
 
-export class DebugAdapterDescriptorFactory implements vscode.DebugAdapterDescriptorFactory  {
-    private context: vscode.ExtensionContext;
-    constructor(context: vscode.ExtensionContext) {
-        this.context = context;
-    }
+export class DebugAdapterDescriptorFactory implements vscode.DebugAdapterDescriptorFactory {
+  private context: vscode.ExtensionContext;
+  constructor(context: vscode.ExtensionContext) {
+    this.context = context;
+  }
 
-    createDebugAdapterDescriptor(session: vscode.DebugSession, executable: vscode.DebugAdapterExecutable | undefined): vscode.ProviderResult<vscode.DebugAdapterDescriptor> {
-        return new vscode.DebugAdapterInlineImplementation(new DebugAdapter(this.context, session));
-    }
+  createDebugAdapterDescriptor(session: vscode.DebugSession, executable: vscode.DebugAdapterExecutable | undefined): vscode.ProviderResult<vscode.DebugAdapterDescriptor> {
+    return new vscode.DebugAdapterInlineImplementation(new DebugAdapter(this.context, session));
+  }
 }
 
 class DebugAdapter extends debugadapter.LoggingDebugSession {
-    private session: vscode.DebugSession;
-    private childSessions: {[key: string]: vscode.DebugSession} = {};
-    private jdwpCleanup: (() => Promise<void>)|undefined;
+  private session: vscode.DebugSession;
+  private childSessions: { [key: string]: vscode.DebugSession } = {};
+  private jdwpCleanup: (() => Promise<void>) | undefined;
+  private logCat: Logcat | null = null;
 
-    constructor(context: vscode.ExtensionContext, session: vscode.DebugSession) {
-        super();
+  constructor(context: vscode.ExtensionContext, session: vscode.DebugSession) {
+    super();
 
-        this.session = session;
-        context.subscriptions.push(vscode.debug.onDidStartDebugSession(this.onDidStartDebugSession));
-        context.subscriptions.push(vscode.debug.onDidTerminateDebugSession(this.onDidTerminateDebugSession));
+    this.session = session;
+    context.subscriptions.push(vscode.debug.onDidStartDebugSession(this.onDidStartDebugSession));
+    context.subscriptions.push(vscode.debug.onDidTerminateDebugSession(this.onDidTerminateDebugSession));
+  }
+
+  private onDidStartDebugSession = (debugSession: vscode.DebugSession) => {
+    if (debugSession.parentSession?.id === this.session.id) {
+      this.childSessions[debugSession.id] = debugSession;
+    }
+  };
+
+  private onDidTerminateDebugSession = (debugSession: vscode.DebugSession) => {
+    if (debugSession.id in this.childSessions) {
+      delete this.childSessions[debugSession.id];
     }
 
-    private onDidStartDebugSession = (debugSession: vscode.DebugSession) => {
-        if (debugSession.parentSession?.id === this.session.id) {
-            this.childSessions[debugSession.id] = debugSession;
-        }
+    // Terminate debug session if no child sessions are active
+    if (!Object.keys(this.childSessions).length) {
+      this.sendEvent(new debugadapter.TerminatedEvent());
+    }
+  };
+
+  private consoleLog(message: string) {
+    this.sendEvent(new debugadapter.OutputEvent(`${message}\n`, "console"));
+  }
+
+  private prepareNativeDebugConfiguration(config: vscode.DebugConfiguration, pid: string) {
+    let lldbConfig: vscode.DebugConfiguration = {
+      "type": "lldb",
+      "name": "Native",
+      "request": "attach",
+      "pid": pid,
+      "androidTarget": config.target.udid,
+      "androidAbi": config.native.abi,
+      "androidPackageName": config.packageName,
     };
 
-    private onDidTerminateDebugSession = (debugSession: vscode.DebugSession) => {
-        if (debugSession.id in this.childSessions) {
-            delete this.childSessions[debugSession.id];
-        }
+    let excludeProperties = ["abi", "abiSupported", "abiMap"];
 
-        // Terminate debug session if no child sessions are active
-        if (!Object.keys(this.childSessions).length) {
-            this.sendEvent(new debugadapter.TerminatedEvent());
+    if (config.native) {
+      for (let key in config.native) {
+        if (!excludeProperties.includes(key)) {
+          lldbConfig[key] = config.native[key];
         }
+      }
+    }
+
+    return lldbConfig;
+  }
+
+  private prepareJavaDebugConfiguration(config: vscode.DebugConfiguration, pid: string) {
+    let javaConfig: vscode.DebugConfiguration = {
+      "type": "java",
+      "name": "Java",
+      "request": "attach",
+      "processId": pid,
+      "androidTarget": config.target.udid,
     };
 
-    private consoleLog(message: string) {
-        this.sendEvent(new debugadapter.OutputEvent(`${message}\n`, "console"));
+    let excludeProperties: string[] = [];
+
+    if (config.java) {
+      for (let key in config.java) {
+        if (!excludeProperties.includes(key)) {
+          javaConfig[key] = config.java[key];
+        }
+      }
     }
 
-    private prepareNativeDebugConfiguration(config: vscode.DebugConfiguration, pid: string) {
-        let lldbConfig: vscode.DebugConfiguration = {
-            "type": "lldb",
-            "name": "Native",
-            "request": "attach",
-            "pid": pid,
-            "androidTarget": config.target.udid,
-            "androidAbi": config.native.abi,
-            "androidPackageName": config.packageName,
-        };
+    return javaConfig;
+  }
 
-        let excludeProperties = ["abi", "abiSupported", "abiMap"];
+  private async attachToProcess(pid: string, response: DebugProtocol.Response) {
+    let config = this.session.configuration;
 
-        if (config.native) {
-            for (let key in config.native) {
-                if (!excludeProperties.includes(key)) {
-                    lldbConfig[key] = config.native[key];
-                }
-            }
-        }
+    // Start capture of logcat, if enabled
+    if (config.captureLogcat) {
+      if (config.clearLogcat) {
+        clearLogcat();
+      }
 
-        return lldbConfig;
+      this.consoleLog("Starting logcat capture");
+      this.logCat = await android.captureLogCat(config.target, pid);
     }
 
-    private prepareJavaDebugConfiguration(config: vscode.DebugConfiguration, pid: string) {
-        let javaConfig: vscode.DebugConfiguration = {
-            "type": "java",
-            "name": "Java",
-            "request": "attach",
-            "processId": pid,
-            "androidTarget": config.target.udid,
-        };
+    let lldbEnabled = config.mode === "dual" || config.mode === "native";
+    let javaEnabled = config.mode === "dual" || config.mode === "java";
 
-        let excludeProperties: string[] = [];
+    extensionDependencies.ensureExtensions(lldbEnabled, javaEnabled);
 
-        if (config.java) {
-            for (let key in config.java) {
-                if (!excludeProperties.includes(key)) {
-                    javaConfig[key] = config.java[key];
-                }
-            }
-        }
+    let lldbSuccess = !lldbEnabled;
+    if (lldbEnabled) {
+      this.consoleLog("Starting Native debugger");
+      let lldbConfig = this.prepareNativeDebugConfiguration(config, pid);
 
-        return javaConfig;
+      lldbSuccess = await vscode.debug.startDebugging(this.session.workspaceFolder, lldbConfig, {
+        parentSession: this.session
+      });
     }
 
-    private async attachToProcess(pid: string, response: DebugProtocol.Response) {
-        let config = this.session.configuration;
+    let javaSuccess = !javaEnabled;
+    if (javaEnabled && lldbSuccess) {
+      this.consoleLog("Starting Java debugger");
+      let javaConfig = this.prepareJavaDebugConfiguration(config, pid);
 
-        let lldbEnabled = config.mode === "dual" || config.mode === "native";
-        let javaEnabled = config.mode === "dual" || config.mode === "java";
-
-        extensionDependencies.ensureExtensions(lldbEnabled, javaEnabled);
-
-        let lldbSuccess = !lldbEnabled;
-        if (lldbEnabled) {
-            this.consoleLog("Starting Native debugger");
-            let lldbConfig = this.prepareNativeDebugConfiguration(config, pid);
-
-            lldbSuccess = await vscode.debug.startDebugging(this.session.workspaceFolder, lldbConfig, {
-                parentSession: this.session
-            });
-        }
-
-        let javaSuccess = !javaEnabled;
-        if (javaEnabled && lldbSuccess) {
-            this.consoleLog("Starting Java debugger");
-            let javaConfig = this.prepareJavaDebugConfiguration(config, pid);
-
-            javaSuccess = await vscode.debug.startDebugging(this.session.workspaceFolder, javaConfig, {
-                parentSession: this.session
-            });
-        }
-
-        response.success = lldbSuccess && javaSuccess;
-
-        if (!response.success) {
-            response.message = !lldbSuccess ? "Could not start native debugger" : !javaSuccess ? "Could not start java debugger" : "Could not start android debugger";
-        }
-
-        if (response.success) {
-            this.consoleLog(`Attached to process ${pid}`);
-        }
-        else {
-            this.consoleLog(`Error: ${response.message}`);
-        }
+      javaSuccess = await vscode.debug.startDebugging(this.session.workspaceFolder, javaConfig, {
+        parentSession: this.session
+      });
     }
 
-    private async resumeProcess(pid: string) {
-        let config = this.session.configuration;
+    response.success = lldbSuccess && javaSuccess;
 
-        if (config.resumeProcess) {
-            try {
-                this.consoleLog(`Resuming process by attaching Java debugger`);
-                this.jdwpCleanup = await android.resumeJavaDebugger(config.target, pid);
-            }
-            catch (e: any) {
-                this.consoleLog(`Error resuming process: ${e.message}`);
-            }
-        }
+    if (!response.success) {
+      response.message = !lldbSuccess ? "Could not start native debugger" : !javaSuccess ? "Could not start java debugger" : "Could not start android debugger";
     }
 
-    protected async attachRequest(response: DebugProtocol.AttachResponse, args: DebugProtocol.AttachRequestArguments, request?: DebugProtocol.Request | undefined): Promise<void> {
-        let pid = this.session.configuration.pid;
-
-        // Attach to process
-        await this.attachToProcess(pid, response);
-
-        // Resume process if applicable
-        await this.resumeProcess(pid);
-
-        this.sendResponse(response);
+    if (response.success) {
+      this.consoleLog(`Attached to process ${pid}`);
+    }
+    else {
+      this.consoleLog(`Error: ${response.message}`);
     }
 
-    protected async launchRequest(response: DebugProtocol.LaunchResponse, args: DebugProtocol.LaunchRequestArguments, request?: DebugProtocol.Request | undefined): Promise<void> {
-        let config = this.session.configuration;
+    // Bring the logcat window to front
+    if (config.captureLogcat) {
+      showLogcat();
+    }
+  }
 
-        let target: Device = config.target;
+  private async resumeProcess(pid: string) {
+    let config = this.session.configuration;
 
-        try {
-            // Install the app if required
-            if (config.apkPath) {
-                this.consoleLog(`Installing ${config.apkPath}`);
-                await android.installApp(target, config.apkPath);
-            }
+    if (config.resumeProcess) {
+      try {
+        this.consoleLog(`Resuming process by attaching Java debugger`);
+        this.jdwpCleanup = await android.resumeJavaDebugger(config.target, pid);
+      }
+      catch (e: any) {
+        this.consoleLog(`Error resuming process: ${e.message}`);
+      }
+    }
+  }
 
-            // Try launching the app
-            if (!config.packageName) {
-                throw new Error("A valid package name is required.");
-            }
-            this.consoleLog(`Launching the app activity ${config.packageName}/${config.launchActivity}`);
-            await android.launchApp(target, config.packageName, config.launchActivity);
+  protected async attachRequest(response: DebugProtocol.AttachResponse, args: DebugProtocol.AttachRequestArguments, request?: DebugProtocol.Request | undefined): Promise<void> {
+    let pid = this.session.configuration.pid;
 
-            this.consoleLog(`Getting pid for the launched app`);
+    // Attach to process
+    await this.attachToProcess(pid, response);
 
-            // Wait for some time before trying to get pid
-            await new Promise((resolve, reject) => setTimeout(resolve, 1000));
+    // Resume process if applicable
+    await this.resumeProcess(pid);
 
-            // Get last pid from jdwp
-            let processList = await android.getProcessList(target, false);
-            let process = processList.length ? processList[processList.length - 1] : undefined;
+    this.sendResponse(response);
+  }
 
-            if (!process?.pid) {
-                throw new Error("Could not get pid for the app. Please ensure that the app is launched correctly.");
-            }
-            else {
-                this.consoleLog(`Attaching to process ${process.pid} (${process.name})`);
-            }
+  protected async launchRequest(response: DebugProtocol.LaunchResponse, args: DebugProtocol.LaunchRequestArguments, request?: DebugProtocol.Request | undefined): Promise<void> {
+    let config = this.session.configuration;
+    let target: Device = config.target;
 
-            // Attach to the process
-            await this.attachToProcess(process.pid, response);
+    try {
+      // Install the app if required
+      if (config.apkPath) {
+        this.consoleLog(`Installing ${config.apkPath}`);
+        await android.installApp(target, config.apkPath);
+      }
 
-            // Resume process if applicable
-            await this.resumeProcess(process.pid);
+      // Try launching the app
+      if (!config.packageName) {
+        throw new Error("A valid package name is required.");
+      }
+
+      this.consoleLog(`Launching the app activity ${config.packageName}/${config.launchActivity}`);
+
+      let extra = {};
+      if ("extra" in config) {
+        extra = config.extra;
+      }
+
+      if ("sync" in config) {
+        for(var i = 0; i < config.sync.length; ++i) {
+          let values = config.sync[i].split(':');
+
+          if (values.length < 2) {
+            throw new Error(`Invalid syntax in sync directory ${config.sync[i]}. (Expected <local>:<remote>)`);
+          }
+
+          let remote = values.pop();
+          let local = values.join(':');
+
+          this.consoleLog(`Syncing directory '${local}' to '${remote}'`);
+          await android.syncDirectory(target, local, remote);
         }
-        catch (e: any) {
-            response.success = false;
-            response.message = `Error launching: ${e.message}`;
-        }
+      }
 
-        this.sendResponse(response);
+      await android.launchApp(target, config.packageName, config.launchActivity, extra);
+
+      this.consoleLog(`Getting pid for the launched app`);
+
+      // Wait for some time before trying to get pid
+      await new Promise((resolve, reject) => setTimeout(resolve, 1000));
+
+      // Get last pid from jdwp
+      let processList = await android.getProcessList(target, false);
+      let process = processList.length ? processList[processList.length - 1] : undefined;
+
+      if (!process?.pid) {
+        throw new Error("Could not get pid for the app. Please ensure that the app is launched correctly.");
+      }
+      else {
+        this.consoleLog(`Attaching to process ${process.pid} (${process.name})`);
+      }
+
+      // Attach to the process
+      await this.attachToProcess(process.pid, response);
+
+      // Resume process if applicable
+      await this.resumeProcess(process.pid);
+    }
+    catch (e: any) {
+      response.success = false;
+      response.message = `Error launching: ${e.message}`;
     }
 
-    protected async disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments, request?: DebugProtocol.Request | undefined): Promise<void> {
-        await Promise.all(Object.values(this.childSessions).map(async (s) => await vscode.debug.stopDebugging(s)));
+    this.sendResponse(response);
+  }
 
-        if (this.jdwpCleanup) {
-            await this.jdwpCleanup();
-            this.jdwpCleanup = undefined;
-        }
+  protected async disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments, request?: DebugProtocol.Request | undefined): Promise<void> {
+    let config = this.session.configuration;
 
-        this.consoleLog("Debugger detached");
-        this.sendResponse(response);
+    await Promise.all(Object.values(this.childSessions).map(async (s) => await vscode.debug.stopDebugging(s)));
+
+    if (this.jdwpCleanup) {
+      await this.jdwpCleanup();
+      this.jdwpCleanup = undefined;
     }
+
+    if (this.logCat !== null) {
+      this.consoleLog(`Stopping logcat capture`);
+      this.logCat.stopCapture();
+      this.logCat = null;
+    }
+
+    this.consoleLog(`Killing app ${config.packageName}`);
+    await android.killApp(config.target, config.packageName);
+
+    this.consoleLog("Debugger detached");
+    this.sendResponse(response);
+  }
 }

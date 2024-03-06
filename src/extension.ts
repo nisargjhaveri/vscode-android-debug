@@ -9,6 +9,9 @@ import * as debugConfigProvider from './debugConfigProvider';
 import * as debugLifecycleManager from './debugLifecycleManager';
 import * as debugAdapter from './debugAdapter';
 import * as androidPaths from './androidPaths';
+import { OutputChannel } from 'vscode';
+
+let logCatOutput: OutputChannel;
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -29,8 +32,33 @@ export async function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('android-debug', new debugAdapter.DebugAdapterDescriptorFactory(context)));
 
+    logCatOutput = vscode.window.createOutputChannel("LogCat", "android-debug-logcat");
+
     await androidPaths.activate(context);
 }
+
+/**
+ * Prints the given content to the logcat output
+ *
+ * @param content The content to be printed.
+ */
+export const printLogcat = (content: string): void => {
+  logCatOutput.appendLine(content);
+};
+
+/**
+ * Switch to the logcat output window
+ */
+export const clearLogcat = (): void => {
+  logCatOutput.clear();
+};
+
+/**
+ * Switch to the logcat output window
+ */
+export const showLogcat = (): void => {
+  logCatOutput.show(true);
+};
 
 // this method is called when your extension is deactivated
 export function deactivate() {}

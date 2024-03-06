@@ -19,6 +19,21 @@
     ],
     "main": "./out/extension.js",
     "contributes": {
+        "languages": [
+            {
+                "id": "android-debug-logcat",
+                "aliases": ["Android Debug Logcat"],
+                "extensions": [],
+                "mimetypes": []
+            }
+        ],
+        "grammars": [
+            {
+                "language": "android-debug-logcat",
+                "scopeName": "android.debug.logcat",
+                "path": "./syntaxes/androiddebuglogcat.tmLanguage"
+            }
+        ],
         "configuration": {
             "title": "Android Debug",
             "properties": {
@@ -366,6 +381,24 @@
                                 "description": "The apk to install and debug",
                                 "type": "string",
                                 "default": "${workspaceFolder}/app/build/outputs/apk/debug/app-debug.apk"
+                            },
+                            "captureLogcat": {
+                              "description": "Capture logcat output while debugging",
+                              "type": "boolean",
+                              "default": false
+                            },
+                            "clearLogcat": {
+                              "description": "Clear logcat when application starts",
+                              "type": "boolean",
+                              "default": true
+                            },
+                            "sync": {
+                              "description": "Sync a directory before debugging",
+                              "type": "array"
+                            },
+                            "extra": {
+                              "description": "Extra arguments to pass",
+                              "type": "object"
                             },
                             "packageName": {
                                 "description": "The package name of the app",

@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>scopeName</key>
+        <string>android.debug.logcat</string>
+        <key>fileTypes</key>
+        <array>
+        </array>
+        <key>name</key>
+        <string>Android Debug Logcat</string>
+        <key>patterns</key>
+        <array>
+            <!-- Verbose -->
+            <dict>
+                <key>match</key>
+                <string>^(\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d.\d\d\d) (\[verbose\])(.*?):(.*)$</string>
+                <key>name</key>
+                <string>strong</string>
+                <key>captures</key>
+                <dict>
+                  <key>1</key>
+                  <dict>
+                    <key>name</key>
+                    <string>comment logcat.date logcat.verbose.date</string>
+                  </dict>
+                  <key>2</key>
+                  <dict>
+                    <key>name</key>
+                    <string>comment logcat.severity logcat.verbose.severity</string>
+                  </dict>
+                  <key>3</key>
+                  <dict>
+                    <key>name</key>
+                    <string>comment logcat.tag logcat.verbose.tag</string>
+                  </dict>
+                  <key>4</key>
+                  <dict>
+                    <key>name</key>
+                    <string>logcat.message logcat.verbose.message</string>
+                  </dict>
+                </dict>
+            </dict>
+
+            <!-- Debug -->
+            <dict>
+                <key>match</key>
+                <string>^(\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d.\d\d\d) (\[debug\])(.*?):(.*)$</string>
+                <key>name</key>
+                <string>strong</string>
+                <key>captures</key>
+                <dict>
+                  <key>1</key>
+                  <dict>
+                    <key>name</key>
+                    <string>comment logcat.date logcat.debug.date</string>
+                  </dict>
+                  <key>2</key>
+                  <dict>
+                    <key>name</key>
+                    <string>markup.changed logcat.severity logcat.debug.severity</string>
+                  </dict>
+                  <key>3</key>
+                  <dict>
+                    <key>name</key>
+                    <string>markup.changed logcat.tag logcat.debug.tag</string>
+                  </dict>
+                  <key>4</key>
+                  <dict>
+                    <key>name</key>
+                    <string>logcat.message logcat.debug.message</string>
+                  </dict>
+                </dict>
+            </dict>
+
+            <!-- Info -->
+            <dict>
+                <key>match</key>
+                <string>^(\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d.\d\d\d) (\[info\])(.*?):(.*)$</string>
+                <key>name</key>
+                <string>strong</string>
+                <key>captures</key>
+                <dict>
+                  <key>1</key>
+                  <dict>
+                    <key>name</key>
+                    <string>comment logcat.date logcat.info.date</string>
+                  </dict>
+                  <key>2</key>
+                  <dict>
+                    <key>name</key>
+                    <string>markup.inserted logcat.severity logcat.info.severity</string>
+                  </dict>
+                  <key>3</key>
+                  <dict>
+                    <key>name</key>
+                    <string>markup.inserted logcat.tag logcat.info.tag</string>
+                  </dict>
+                  <key>4</key>
+                  <dict>
+                    <key>name</key>
+                    <string>logcat.message logcat.info.message</string>
+                  </dict>
+                </dict>
+            </dict>
+
+            <!-- Warning -->
+            <dict>
+                <key>match</key>
+                <string>^(\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d.\d\d\d) (\[warning\])(.*?):(.*)$</string>
+                <key>name</key>
+                <string>strong</string>
+                <key>captures</key>
+                <dict>
+                  <key>1</key>
+                  <dict>
+                    <key>name</key>
+                    <string>comment logcat.date logcat.warning.date</string>
+                  </dict>
+                  <key>2</key>
+                  <dict>
+                    <key>name</key>
+                    <string>markup.deleted logcat.severity logcat.warning.severity</string>
+                  </dict>
+                  <key>3</key>
+                  <dict>
+                    <key>name</key>
+                    <string>markup.deleted logcat.tag logcat.warning.tag</string>
+                  </dict>
+                  <key>4</key>
+                  <dict>
+                    <key>name</key>
+                    <string>logcat.message logcat.warning.message</string>
+                  </dict>
+                </dict>
+            </dict>
+
+            <!-- Error -->
+            <dict>
+                <key>match</key>
+                <string>^(\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d.\d\d\d) (\[error\])(.*?):(.*)$</string>
+                <key>name</key>
+                <string>strong</string>
+                <key>captures</key>
+                <dict>
+                  <key>1</key>
+                  <dict>
+                    <key>name</key>
+                    <string>comment logcat.date logcat.error.date</string>
+                  </dict>
+                  <key>2</key>
+                  <dict>
+                    <key>name</key>
+                    <string>string.regexp logcat.severity logcat.error.severity</string>
+                  </dict>
+                  <key>3</key>
+                  <dict>
+                    <key>name</key>
+                    <string>string.regexp logcat.tag logcat.error.tag</string>
+                  </dict>
+                  <key>4</key>
+                  <dict>
+                    <key>name</key>
+                    <string>logcat.message logcat.error.message</string>
+                  </dict>
+                </dict>
+            </dict>
+
+            <!-- Fatal -->
+            <dict>
+                <key>match</key>
+                <string>^(\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d.\d\d\d) (\[fatal\])(.*?):(.*)$</string>
+                <key>name</key>
+                <string>strong</string>
+                <key>captures</key>
+                <dict>
+                  <key>1</key>
+                  <dict>
+                    <key>name</key>
+                    <string>comment logcat.date logcat.fatal.date</string>
+                  </dict>
+                  <key>2</key>
+                  <dict>
+                    <key>name</key>
+                    <string>string.regexp logcat.severity logcat.fatal.severity</string>
+                  </dict>
+                  <key>3</key>
+                  <dict>
+                    <key>name</key>
+                    <string>string.regexp logcat.tag logcat.fatal.tag</string>
+                  </dict>
+                  <key>4</key>
+                  <dict>
+                    <key>name</key>
+                    <string>logcat.message logcat.fatal.message</string>
+                  </dict>
+                </dict>
+            </dict>
+        </array>
+        <key>uuid</key>
+        <string>3cffd9dc-7728-11ee-b962-0242ac120002</string>
+    </dict>
+</plist>
