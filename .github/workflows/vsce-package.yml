@@ -21,10 +21,10 @@ jobs:
     - name: Install Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: 16.x
+        node-version: 18.x
         cache: 'npm'
     - run: npm ci
-    - run: npm install -g vsce
+    - run: npm install -g @vscode/vsce
     - run: vsce package --out android-debug.vsix
     - if: success() && matrix.os == 'ubuntu-latest'
       uses: actions/upload-artifact@v2
