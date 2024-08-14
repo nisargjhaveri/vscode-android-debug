@@ -5,7 +5,7 @@ import * as fsPromises from 'fs/promises';
 import * as ini from 'ini';
 import * as teen_process from 'teen_process';
 
-import { ADB, BinaryName, Device, VerboseDevice, ShellExecOptions } from 'appium-adb';
+import { ADB, Device, VerboseDevice, ShellExecOptions } from 'appium-adb';
 
 import { logger } from './logger';
 import * as utils from './utils';
@@ -329,7 +329,7 @@ export async function getAvdList() {
     let adb = await getAdb();
 
     try {
-        let emulatorPath = await adb.getBinaryFromSdkRoot("emulator" as BinaryName);
+        let emulatorPath = await adb.getBinaryFromSdkRoot("emulator");
 
         let result = await teen_process.exec(emulatorPath, ['-list-avds'], {shell: false});
 
