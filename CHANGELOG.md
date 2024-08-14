@@ -2,6 +2,10 @@
 
 All notable changes to the "android-debug" extension will be documented in this file.
 
+## v0.0.10
+- Minor fixes and upgrade to some dependencies.
+- Ignore SIGBUS in native debugging to better align with Android Studio.
+
 ## v0.0.9
 - Breaking: `mode` now defaults to `java` instead of `native` if not specified.
 - Add option to install apk while by specifying `apkPath` option for `launch` requests.
