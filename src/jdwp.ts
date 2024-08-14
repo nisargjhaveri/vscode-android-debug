@@ -88,7 +88,7 @@ export class JDWP {
         const handshake = 'JDWP-Handshake';
         await this.write(handshake);
 
-        const reply = (await this.read(handshake.length, 3000)).toString('latin1');
+        const reply = (await this.read(handshake.length, 30000)).toString('latin1');
         if (reply !== handshake) {
             throw new Error("JDWP Handshake failed");
         }
