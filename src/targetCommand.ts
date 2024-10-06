@@ -17,7 +17,7 @@ let currentPackageName: string|undefined;
 
 const defaultAbiSupportedList = ["armeabi", "armeabi-v7a", "arm64-v8a", "x86", "x86_64"];
 
-async function resolveArgs<T extends {device?: Device}>(args: T): Promise<T>
+async function resolveArgs<T extends {device?: Device}>(args: T = {} as T): Promise<T>
 {
     if (!args.device)
     {
@@ -210,6 +210,24 @@ export async function forwardJdwpPort(args: {device: Device, pid: string}) {
 
 export async function removeTcpForward(device: Device, port: string) {
     return await android.removeTcpForward(device, port);
+}
+
+export async function resumeWaitingProcess(args: {device: Device, pid?: string}) {
+    let {device, pid} = await resolveArgs(args);
+
+    if (device && !pid) {
+        pid = await pickAndroidProcess({device});
+    }
+
+    if (!pid) {
+        return;
+    }
+
+    logger.log(`Resuming process ${pid}`);
+
+    const jdwpCleanup = await android.resumeJavaDebugger(device, pid);
+
+    setTimeout(async () => await jdwpCleanup(), 500);
 }
 
 export function activate(c: vscode.ExtensionContext) {

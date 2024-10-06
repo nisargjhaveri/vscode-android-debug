@@ -13,12 +13,20 @@
     ],
     "activationEvents": [
         "onCommand:android-debug.pickAndroidProcess",
+        "onCommand:android-debug.resumeWaitingProcess",
         "onDebugResolve:lldb",
         "onDebugResolve:java",
         "onDebugResolve:android-debug"
     ],
     "main": "./out/extension.js",
     "contributes": {
+        "commands": [
+            {
+                "command": "android-debug.resumeWaitingProcess",
+                "title": "Resume process waiting for debugger",
+                "category": "Android Debug"
+            }
+        ],
         "configuration": {
             "title": "Android Debug",
             "properties": {
