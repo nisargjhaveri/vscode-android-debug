@@ -335,7 +335,9 @@ export async function getAvdList() {
 
         let avdNames: string[] = [];
         if (result.code === 0) {
-            avdNames = result.stdout.split("\n").map((avd) => avd.trim()).filter((avd) => avd);
+            avdNames = result.stdout.split("\n")
+                .map((avd) => avd.trim())
+                .filter((avd) => avd && !avd.startsWith("INFO    |") && !avd.startsWith("ERROR   |"));
         }
 
         return avdNames;
