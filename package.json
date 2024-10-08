@@ -25,6 +25,16 @@
                 "command": "android-debug.resumeWaitingProcess",
                 "title": "Resume process waiting for debugger",
                 "category": "Android Debug"
+            },
+            {
+                "command": "android-debug.startLogcat",
+                "title": "Logcat",
+                "category": "Android"
+            },
+            {
+                "command": "android-debug.stopLogcat",
+                "title": "Stop Logcat",
+                "category": "Android"
             }
         ],
         "configuration": {

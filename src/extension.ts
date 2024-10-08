@@ -5,6 +5,7 @@ import * as vscode from 'vscode';
 import { logger } from './logger';
 import * as targetPicker from './targetPicker';
 import * as targetCommand from './targetCommand';
+import * as logcat from './logcat';
 import * as debugConfigProvider from './debugConfigProvider';
 import * as debugLifecycleManager from './debugLifecycleManager';
 import * as debugAdapter from './debugAdapter';
@@ -24,6 +25,9 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('android-debug.getBestMappedAbi', targetCommand.getBestMappedAbi));
 
     context.subscriptions.push(vscode.commands.registerCommand('android-debug.resumeWaitingProcess', targetCommand.resumeWaitingProcess));
+
+    context.subscriptions.push(vscode.commands.registerCommand('android-debug.startLogcat', logcat.startLogcat));
+    context.subscriptions.push(vscode.commands.registerCommand('android-debug.stopLogcat', logcat.stopLogcat));
 
     context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('lldb', new debugConfigProvider.LLDBDebugConfigurationProvider()));
     context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('java', new debugConfigProvider.JavaDebugConfigurationProvider()));
