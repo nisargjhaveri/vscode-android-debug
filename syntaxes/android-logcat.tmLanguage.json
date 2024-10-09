@@ -1,0 +1,73 @@
+{
+    "scopeName": "source.logcat",
+    "patterns": [{ "include": "#log-entry" }],
+    "repository": {
+      "log-entry": {
+        "patterns": [
+            { "include": "#meta" },
+            { "include": "#log-verbose" },
+            { "include": "#log-debug" },
+            { "include": "#log-info" },
+            { "include": "#log-warn" },
+            { "include": "#log-error" },
+            { "include": "#log-fatal" }
+        ]
+      },
+      "meta": {
+        "match": "^((?:\\d{4}-)?\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})\\s+(\\d+)\\s+(\\d+)\\b",
+        "captures": {
+          "1": { "name": "comment log.date" },
+          "2": { "name": "log.pid" },
+          "3": { "name": "log.tid" }
+        }
+      },
+      "log-verbose": {
+        "begin": " V ",
+        "end": "$",
+        "beginCaptures": {
+          "0": { "name": "strong" }
+        },
+        "name": "log.verbose"
+      },
+      "log-debug": {
+        "begin": " D ",
+        "end": "$",
+        "beginCaptures": {
+          "0": { "name": "strong" }
+        },
+        "name": "markup.changed log.debug"
+      },
+      "log-info": {
+        "begin": " I ",
+        "end": "$",
+        "beginCaptures": {
+          "0": { "name": "strong" }
+        },
+        "name": "markup.inserted log.info"
+      },
+      "log-warn": {
+        "begin": " W ",
+        "end": "$",
+        "beginCaptures": {
+          "0": { "name": "strong" }
+        },
+        "name": "markup.deleted token.warn-token log.warn"
+      },
+      "log-error": {
+        "begin": " E ",
+        "end": "$",
+        "beginCaptures": {
+          "0": { "name": "strong" }
+        },
+        "name": "string.regexp strong log.error"
+      },
+      "log-fatal": {
+        "begin": " F ",
+        "end": "$",
+        "beginCaptures": {
+          "0": { "name": "strong" }
+        },
+        "name": "string.regexp strong log.error log.fatal"
+      }
+    }
+}

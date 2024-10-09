@@ -101,7 +101,7 @@ export async function startLogcat(args: {device: Device}) {
 
     const uniqueName = device.udid;
 
-    const outputChannel = logcatOutputChannels.get(uniqueName) ?? vscode.window.createOutputChannel(`Logcat - ${uniqueName}`);
+    const outputChannel = logcatOutputChannels.get(uniqueName) ?? vscode.window.createOutputChannel(`Logcat - ${uniqueName}`, "android-logcat");
     logcatOutputChannels.set(uniqueName, outputChannel);
 
     if (logcatInstances.has(uniqueName)) {
