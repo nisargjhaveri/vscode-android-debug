@@ -1,7 +1,6 @@
 import * as net from 'net';
 
 import { logger } from './logger';
-import * as utils from './utils';
 
 export class JDWP {
     private socket: net.Socket;
