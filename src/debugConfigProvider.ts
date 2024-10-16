@@ -192,3 +192,49 @@ export class AndroidDebugConfigurationProvider implements vscode.DebugConfigurat
         return dbgConfig;
      }
  }
+
+export class AndroidProfileConfigurationProvider implements vscode.DebugConfigurationProvider
+{
+    async resolveDebugConfiguration(folder: vscode.WorkspaceFolder|undefined, dbgConfig: vscode.DebugConfiguration, token: vscode.CancellationToken) {
+        logger.log("android profiler resolveDebugConfiguration", dbgConfig);
+
+        let target: Device|undefined = await getTarget(dbgConfig.target ?? "select");
+        if (!target) { return null; }
+
+        dbgConfig.target = target;
+
+        dbgConfig.request = "launch";
+        dbgConfig.noDebug = true;
+
+        dbgConfig.native = dbgConfig.native ?? {};
+
+        let config = vscode.workspace.getConfiguration("android-debug");
+        dbgConfig.native.abiSupported = dbgConfig.native.abiSupported ?? config.get("abiSupported");
+        dbgConfig.native.abiMap = dbgConfig.native.abiMap ?? config.get("abiMap");
+
+        targetPicker.setCurrentTarget(target);
+        targetCommand.setAbiResolutionInfo(dbgConfig.native.abi, dbgConfig.native.abiSupported, dbgConfig.native.abiMap);
+        targetCommand.setProcessPickerInfo(dbgConfig.packageName);
+
+        return dbgConfig;
+    }
+
+    async resolveDebugConfigurationWithSubstitutedVariables(folder: vscode.WorkspaceFolder|undefined, dbgConfig: vscode.DebugConfiguration, token: vscode.CancellationToken) {
+        logger.log("android profiler resolveDebugConfigurationWithSubstitutedVariables", dbgConfig);
+
+        if (!dbgConfig.target) { return dbgConfig; }
+
+        const target: Device = dbgConfig.target;
+
+        if (!dbgConfig.packageName && dbgConfig.pid) {
+            dbgConfig.packageName = await targetCommand.getPackageNameForPid({device: target, pid: dbgConfig.pid});
+        }
+
+        targetPicker.resetCurrentTarget();
+        targetCommand.resetAbiResolutionInfo();
+        targetCommand.resetProcessPickerInfo();
+
+        logger.log("android profiler resolved debug configuration", dbgConfig);
+        return dbgConfig;
+    }
+}

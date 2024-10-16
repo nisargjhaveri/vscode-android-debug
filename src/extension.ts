@@ -9,6 +9,7 @@ import * as debugConfigProvider from './debugConfigProvider';
 import * as debugLifecycleManager from './debugLifecycleManager';
 import * as debugAdapter from './debugAdapter';
 import * as androidPaths from './androidPaths';
+import * as profiler from './profiler';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -28,8 +29,10 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('lldb', new debugConfigProvider.LLDBDebugConfigurationProvider()));
     context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('java', new debugConfigProvider.JavaDebugConfigurationProvider()));
     context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('android-debug', new debugConfigProvider.AndroidDebugConfigurationProvider()));
+    context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('android-profile', new debugConfigProvider.AndroidProfileConfigurationProvider()));
 
     context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('android-debug', new debugAdapter.DebugAdapterDescriptorFactory(context)));
+    context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('android-profile', new profiler.ProfilerDebugAdapterDescriptorFactory(context)));
 
     await androidPaths.activate(context);
 }

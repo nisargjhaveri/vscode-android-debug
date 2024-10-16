@@ -41,6 +41,22 @@
             },
 
             "preLaunchTask": "Build Debug APK"
-        }
+        },
+        {
+            "name": "Android Profile",
+            "type": "android-profile",
+            "request": "launch",
+
+            "target": "select",
+
+            // "pid": "${command:pickAndroidProcess}",
+            "packageName": "com.example.sampleapplication",
+
+            "native": {
+                "symbolSearchPaths": [
+                    "${workspaceFolder}/app/build/intermediates/cmake/debug/obj/${command:abi}/",
+                ],
+            },
+        },
     ]
 }

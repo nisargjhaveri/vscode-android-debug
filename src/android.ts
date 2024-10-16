@@ -21,7 +21,7 @@ export async function handlePathsUpdated() {
 }
 
 // ADB helpers
-export async function getAdb() {
+export async function getAdb(): Promise<ADB> {
     if (!adb || forceRecreateAdb) {
         adb = await ADB.createADB({sdkRoot: androidPaths.requireSdkRoot()});
         forceRecreateAdb = false;
@@ -30,7 +30,7 @@ export async function getAdb() {
     return adb;
 }
 
-export async function getDeviceAdb(device: Device) {
+export async function getDeviceAdb(device: Device): Promise<ADB> {
     let deviceAdb = (await getAdb()).clone();
     deviceAdb.setDevice(device);
 
@@ -175,6 +175,44 @@ export async function startLldbServer(device: Device, packageName: string, abi: 
         subprocess,
         stop: () => subprocess.stop()
     };
+}
+
+// Simpleperf
+export async function pushSimpleperf(deviceAdb: ADB): Promise<string> {
+    const abi = (await getDeviceAbiListInternal(deviceAdb))?.[0];
+    const deviceArch = abi.startsWith("armeabi") ? "arm" : (abi === "arm64-v8a") ? "aarch64" : (abi === "x86") ? "i386" : "x86_64";
+
+    const simpleperfLocalPath = path.normalize(`${androidPaths.requireNdkRoot()}/simpleperf/bin/android/${deviceArch}/simpleperf`);
+
+    try {
+        await fsPromises.access(simpleperfLocalPath, fs.constants.R_OK);
+    } catch {
+        throw new Error("Could not locate simpleperf for the device");
+    }
+
+    const simpleperfDevicePath = "/data/local/tmp/simpleperf";
+
+    await deviceAdb.push(simpleperfLocalPath, simpleperfDevicePath);
+    await deviceAdb.shell(`chmod a+x ${simpleperfDevicePath}`);
+
+    return simpleperfDevicePath;
+}
+
+export async function getHostSimpleperf(): Promise<string> {
+    const osPlatform = os.platform();
+    const platform = osPlatform === "win32" ? "windows" : osPlatform;
+
+    const ext = osPlatform === "win32" ? ".exe" : "";
+
+    const simpleperfLocalPath = path.normalize(`${androidPaths.requireNdkRoot()}/simpleperf/bin/${platform}/x86_64/simpleperf${ext}`);
+
+    try {
+        await fsPromises.access(simpleperfLocalPath, fs.constants.R_OK);
+    } catch {
+        throw new Error("Could not locate simpleperf for the host");
+    }
+
+    return simpleperfLocalPath;
 }
 
 // Process information

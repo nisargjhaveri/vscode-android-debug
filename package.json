@@ -16,7 +16,8 @@
         "onCommand:android-debug.resumeWaitingProcess",
         "onDebugResolve:lldb",
         "onDebugResolve:java",
-        "onDebugResolve:android-debug"
+        "onDebugResolve:android-debug",
+        "onDebugResolve:android-profile"
     ],
     "main": "./out/extension.js",
     "contributes": {
@@ -468,6 +469,129 @@
                                 "properties": {
                                     "sourcePaths": {
                                         "description": "Path to your java source code for the app.",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "type": "android-profile",
+                "label": "Android Profile",
+                "variables": {
+                    "pickAndroidProcess": "android-debug.pickAndroidProcess",
+                    "abi": "android-debug.getBestAbi",
+                    "mappedAbi": "android-debug.getBestMappedAbi"
+                },
+                "configurationAttributes": {
+                    "launch": {
+                        "oneOf": [
+                            {
+                                "required": [
+                                    "packageName"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "pid"
+                                ]
+                            }
+                        ],
+                        "properties": {
+                            "target": {
+                                "description": "Target serial or `select` to select target device.",
+                                "anyOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "enum": [
+                                            "select",
+                                            "last-selected"
+                                        ]
+                                    }
+                                ],
+                                "default": "select"
+                            },
+                            "packageName": {
+                                "description": "The package name of the app",
+                                "type": "string"
+                            },
+                            "pid": {
+                                "description": "The Android process to attach.",
+                                "anyOf": [
+                                    {
+                                        "type": "number"
+                                    },
+                                    {
+                                        "enum": [
+                                            "${command:pickAndroidProcess}"
+                                        ]
+                                    }
+                                ]
+                            },
+                            "native": {
+                                "description": "Configuration for native debugger.",
+                                "type": "object",
+                                "properties": {
+                                    "abiSupported": {
+                                        "description": "List of ABIs supported by the app",
+                                        "type": "array",
+                                        "items": {
+                                            "enum": [
+                                                "armeabi",
+                                                "armeabi-v7a",
+                                                "arm64-v8a",
+                                                "x86",
+                                                "x86_64"
+                                            ]
+                                        },
+                                        "default": [
+                                            "armeabi-v7a",
+                                            "arm64-v8a",
+                                            "x86",
+                                            "x86_64"
+                                        ]
+                                    },
+                                    "abi": {
+                                        "description": "The ABI to be used in case of split APKs.",
+                                        "enum": [
+                                            "select",
+                                            "armeabi",
+                                            "armeabi-v7a",
+                                            "arm64-v8a",
+                                            "x86",
+                                            "x86_64"
+                                        ]
+                                    },
+                                    "abiMap": {
+                                        "description": "Map android ABI to custom strings, use with ${command:mappedAbi}.",
+                                        "type": "object",
+                                        "properties": {
+                                            "armeabi": {
+                                                "type": "string"
+                                            },
+                                            "armeabi-v7a": {
+                                                "type": "string"
+                                            },
+                                            "arm64-v8a": {
+                                                "type": "string"
+                                            },
+                                            "x86": {
+                                                "type": "string"
+                                            },
+                                            "x86_64": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "symbolSearchPaths": {
+                                        "description": "List of paths to where your unstripped so files are located.",
                                         "type": "array",
                                         "items": {
                                             "type": "string"
