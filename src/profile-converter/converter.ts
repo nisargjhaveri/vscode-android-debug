@@ -24,11 +24,10 @@ class Categories {
     private static categoryList: CategoryList = [];
 
     static readonly Other = this.createCategory("Other", "grey");
-    // static readonly Native = this.createCategory("Native", "yellow");
-    // static readonly JIT_JVM = this.createCategory("JIT JVM", "green");
-    // static readonly Interpreted_JVM = this.createCategory("Interpreted JVM", "green");
-    // static readonly ART = this.createCategory("ART", "green");
-    // static readonly Kernel = this.createCategory("Kernel", "orange");
+    static readonly Native = this.createCategory("Native", "magenta");
+    static readonly Java = this.createCategory("Java", "green");
+    static readonly System = this.createCategory("System", "yellow");
+    static readonly Kernel = this.createCategory("Kernel", "orange");
 
     static toJson(): CategoryList {
         return this.categoryList;
@@ -295,21 +294,22 @@ class FirefoxThread {
 
             const funcIndex = this.funcTable.findOrAddFunc(methodName, resourceIndex);
 
+            const filePath = file.path ?? "";
+            const fileInAppData = filePath.startsWith("/data/app/");
+            const fileInSystem = filePath.startsWith("/apex/") || filePath.startsWith("/system/") || filePath.startsWith("/vendor/");
+
             let category: IndexIntoCategoryList = Categories.Other;
-            // switch (frame.executionType) {
-            //     case report.Sample.CallChainEntry.ExecutionType.NATIVE_METHOD:
-            //         category = Categories.Native;
-            //         break;
-            //     case report.Sample.CallChainEntry.ExecutionType.INTERPRETED_JVM_METHOD:
-            //         category = Categories.Interpreted_JVM;
-            //         break;
-            //     case report.Sample.CallChainEntry.ExecutionType.JIT_JVM_METHOD:
-            //         category = Categories.JIT_JVM;
-            //         break;
-            //     case report.Sample.CallChainEntry.ExecutionType.ART_METHOD:
-            //         category = Categories.ART;
-            //         break;
-            // };
+            if (filePath === "[kernel.kallsyms]" || filePath.endsWith(".ko")) {
+                category = Categories.Kernel;
+            } else if (fileInAppData) {
+                if (filePath.endsWith(".so")) {
+                    category = Categories.Native;
+                } else {
+                    category = Categories.Java;
+                }
+            } else if (fileInSystem) {
+                category = Categories.System;
+            }
 
             const frameIndex = this.frameTable.findOrAddFrame(funcIndex, category);
 
