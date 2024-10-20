@@ -17,7 +17,8 @@
         "onDebugResolve:lldb",
         "onDebugResolve:java",
         "onDebugResolve:android-debug",
-        "onDebugResolve:android-profile"
+        "onDebugResolve:android-profile",
+        "onCustomEditor:android-debug.profile"
     ],
     "main": "./out/extension.js",
     "contributes": {
@@ -602,6 +603,17 @@
                         }
                     }
                 }
+            }
+        ],
+        "customEditors": [
+            {
+                "viewType": "android-debug.profile",
+                "displayName": "Android Profile",
+                "selector": [
+                    {
+                        "filenamePattern": "*.trace"
+                    }
+                ]
             }
         ]
     },

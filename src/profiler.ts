@@ -10,6 +10,7 @@ import * as path from 'path';
 
 import * as android from './android';
 import * as utils from './utils';
+import { SimpleperfReportCustomEditor } from './profile-viewer/profileCustomEditor';
 
 export class ProfilerDebugAdapterDescriptorFactory implements vscode.DebugAdapterDescriptorFactory  {
     private context: vscode.ExtensionContext;
@@ -118,7 +119,7 @@ class ProfilerDebugAdapter extends debugadapter.LoggingDebugSession {
 
                 logger.log(`simpleperf report-sample exited with code ${code}`);
 
-                await vscode.commands.executeCommand('vscode.open', vscode.Uri.file(localTracePath));
+                await vscode.commands.executeCommand('vscode.openWith', vscode.Uri.file(localTracePath).with({scheme: 'untitled'}), SimpleperfReportCustomEditor.viewType);
             } catch (e) {
                 logger.error(`Error processing simpleperf output: ${e}`);
                 vscode.window.showErrorMessage(`Error processing simpleperf output: ${e}`);

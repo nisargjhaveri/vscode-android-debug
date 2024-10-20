@@ -455,8 +455,8 @@ export class SimpleperfReportConverter {
     private buffer: Buffer;
     private bufferOffset: number = 0;
 
-    constructor(file: string) {
-        this.buffer = fs.readFileSync(file);
+    constructor(buffer: Buffer) {
+        this.buffer = buffer;
     }
 
     private readUint16LE() {

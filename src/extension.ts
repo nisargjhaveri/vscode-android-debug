@@ -10,6 +10,7 @@ import * as debugLifecycleManager from './debugLifecycleManager';
 import * as debugAdapter from './debugAdapter';
 import * as androidPaths from './androidPaths';
 import * as profiler from './profiler';
+import { SimpleperfReportCustomEditor } from './profile-viewer/profileCustomEditor';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -33,6 +34,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('android-debug', new debugAdapter.DebugAdapterDescriptorFactory(context)));
     context.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('android-profile', new profiler.ProfilerDebugAdapterDescriptorFactory(context)));
+
+    context.subscriptions.push(SimpleperfReportCustomEditor.register(context));
 
     await androidPaths.activate(context);
 }
