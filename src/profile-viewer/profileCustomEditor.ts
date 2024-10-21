@@ -110,6 +110,7 @@ export class SimpleperfReportCustomEditor implements vscode.CustomEditorProvider
         (async function() {
             const profilerBaseUrl = "${profilerBaseUrl}";
             document.body.style.padding = '0';
+            document.body.style.overflow = 'hidden';
 
             var iframe = document.createElement('iframe');
             iframe.src = profilerBaseUrl + "/from-post-message/";
