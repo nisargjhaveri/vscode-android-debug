@@ -1,4 +1,3 @@
-import * as fs from 'fs';
 import * as path from 'path';
 import { logger } from '../logger';
 import { simpleperf_report_proto as report } from "./simpleperf/simpleperf_report";
@@ -485,7 +484,7 @@ export class SimpleperfReportConverter {
         return report.Record.decode(recordBuffer);
     }
 
-    async process() {
+    async process(): Promise<SerializableProfile> {
         this.verifyMagic();
 
         // Parse version

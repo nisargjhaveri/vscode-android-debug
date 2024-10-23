@@ -80,51 +80,49 @@ class ProfilerDebugAdapter extends debugadapter.LoggingDebugSession {
         return command.join(" ");
     }
 
-    private async processSimpleperfOutput(deviceAdb: ADB): Promise<void> {
-        vscode.window.withProgress({location: vscode.ProgressLocation.Notification, title: "Processing simpleperf output"}, async (progress, token) => {
-            try {
-                progress.report({message: "Pulling simpleperf output"});
+    private async processSimpleperfOutput(progress: vscode.Progress<{message: string|undefined}> , deviceAdb: ADB): Promise<void> {
+        try {
+            progress.report({message: "Copy simpleperf output from device"});
 
-                const localOutputPath = path.join(os.tmpdir(), `${this.simpleperfOutputFileBaseName}.data`);
-                await deviceAdb.pull(this.simpleperfOutputDevicePath, localOutputPath);
-                logger.log(`Pulled simpleperf output to ${localOutputPath}`);
+            const localOutputPath = path.join(os.tmpdir(), `${this.simpleperfOutputFileBaseName}.data`);
+            await deviceAdb.pull(this.simpleperfOutputDevicePath, localOutputPath);
+            logger.log(`Pulled simpleperf output to ${localOutputPath}`);
 
-                progress.report({message: "Processing simpleperf output"});
-                const localTracePath = path.join(os.tmpdir(), `${this.simpleperfOutputFileBaseName}.trace`);
-                logger.log(`Converting simpleperf output to ${localTracePath}`);
+            progress.report({message: "Processing simpleperf output"});
+            const localTracePath = path.join(os.tmpdir(), `${this.simpleperfOutputFileBaseName}.trace`);
+            logger.log(`Converting simpleperf output to ${localTracePath}`);
 
-                const simpleperfHostPath = await android.getHostSimpleperf();
+            const simpleperfHostPath = await android.getHostSimpleperf();
 
-                const simpleperfArgs = ["report-sample", "--protobuf", "--show-callchain", "-i", localOutputPath, "-o", localTracePath];
+            const simpleperfArgs = ["report-sample", "--protobuf", "--show-callchain", "-i", localOutputPath, "-o", localTracePath];
 
-                const config = this.session.configuration;
-                const symbolSearchPaths: string[] = config?.native?.symbolSearchPaths ?? [];
-                for (const symbolSearchPath of symbolSearchPaths) {
-                    simpleperfArgs.push("--symdir", symbolSearchPath);
-                }
-
-                logger.log(`Running simpleperf: ${simpleperfHostPath} ${simpleperfArgs.join(" ")}`);
-
-                const { code } = await teen_process.exec(
-                    simpleperfHostPath,
-                    simpleperfArgs,
-                    {
-                        logger: {
-                            debug(...args) {
-                                logger.log("simpleperf:", ...args);
-                            },
-                        }
-                    }
-                );
-
-                logger.log(`simpleperf report-sample exited with code ${code}`);
-
-                await vscode.commands.executeCommand('vscode.openWith', vscode.Uri.file(localTracePath).with({scheme: 'untitled'}), SimpleperfReportCustomEditor.viewType);
-            } catch (e) {
-                logger.error(`Error processing simpleperf output: ${e}`);
-                vscode.window.showErrorMessage(`Error processing simpleperf output: ${e}`);
+            const config = this.session.configuration;
+            const symbolSearchPaths: string[] = config?.native?.symbolSearchPaths ?? [];
+            for (const symbolSearchPath of symbolSearchPaths) {
+                simpleperfArgs.push("--symdir", symbolSearchPath);
             }
-        });
+
+            logger.log(`Running simpleperf: ${simpleperfHostPath} ${simpleperfArgs.join(" ")}`);
+
+            const { code } = await teen_process.exec(
+                simpleperfHostPath,
+                simpleperfArgs,
+                {
+                    logger: {
+                        debug(...args) {
+                            logger.log("simpleperf:", ...args);
+                        },
+                    }
+                }
+            );
+
+            logger.log(`simpleperf report-sample exited with code ${code}`);
+
+            await vscode.commands.executeCommand('vscode.openWith', vscode.Uri.file(localTracePath).with({scheme: 'untitled'}), SimpleperfReportCustomEditor.viewType);
+        } catch (e) {
+            logger.error(`Error processing simpleperf output: ${e}`);
+            vscode.window.showErrorMessage(`Error processing simpleperf output: ${e}`);
+        }
     }
 
     protected async launchRequest(response: DebugProtocol.LaunchResponse, args: DebugProtocol.LaunchRequestArguments, request?: DebugProtocol.Request | undefined): Promise<void> {
@@ -192,9 +190,12 @@ class ProfilerDebugAdapter extends debugadapter.LoggingDebugSession {
                 const deviceAdb = await android.getDeviceAdb(config.target);
                 deviceAdb.shell(['kill', this.simpleperfPid.toString()]);
 
-                await this.simpleperfProcess?.join();
+                await vscode.window.withProgress({location: vscode.ProgressLocation.Notification, title: "Android Profiler"}, async (progress, token) => {
+                    progress.report({message: "Waiting for simpleperf to exit"});
+                    await this.simpleperfProcess?.join();
 
-                this.processSimpleperfOutput(deviceAdb);
+                    await this.processSimpleperfOutput(progress, deviceAdb);
+                });
             }
         } catch (e) {
             logger.error(`Error stopping profiler: ${e}`);

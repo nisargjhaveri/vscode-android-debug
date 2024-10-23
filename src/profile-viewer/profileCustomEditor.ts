@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { SimpleperfReportConverter } from '../profile-converter/converter';
+import { SerializableProfile } from '../profile-converter/firefox-profiler/profile';
 // import { logger } from './logger'
 
 export class SimpleperfReportCustomDocument implements vscode.CustomDocument {
@@ -86,13 +87,18 @@ export class SimpleperfReportCustomEditor implements vscode.CustomEditorProvider
             enableScripts: true,
         };
 
-        const processedProfilePromise = new SimpleperfReportConverter(document.buffer).process();
-
         const profilerBaseUrl = "https://deploy-preview-5170--perf-html.netlify.app";
         webviewPanel.webview.html = this.getWebviewContent(profilerBaseUrl);
+
+        let processedProfilePromise: Promise<SerializableProfile>;
         webviewPanel.webview.onDidReceiveMessage(async (message) => {
-            if (message.name === "is-ready") {
-                webviewPanel.webview.postMessage({ name: 'inject-profile', profile: await processedProfilePromise });
+            switch (message.name) {
+                case "profiler:onload":
+                    processedProfilePromise = new SimpleperfReportConverter(document.buffer).process();
+                    break;
+                case "profiler:ready":
+                    webviewPanel.webview.postMessage({ name: 'inject-profile', profile: await processedProfilePromise });
+                    break;
             }
         });
     }
@@ -108,6 +114,9 @@ export class SimpleperfReportCustomEditor implements vscode.CustomEditorProvider
     <body style="padding: 0">
         <script>
         (async function() {
+            const vscode = acquireVsCodeApi();
+            vscode.postMessage({ name: 'profiler:onload' });
+
             const profilerBaseUrl = "${profilerBaseUrl}";
             document.body.style.padding = '0';
             document.body.style.overflow = 'hidden';
@@ -122,7 +131,7 @@ export class SimpleperfReportCustomEditor implements vscode.CustomEditorProvider
             let isProfilerReady = false;
             window.addEventListener('message', ({data}) => {
                 switch (data.name) {
-                    case "is-ready":
+                    case "ready:response":
                         // Ready message coming from the profiler
                         isProfilerReady = true;
                         break;
@@ -138,11 +147,10 @@ export class SimpleperfReportCustomEditor implements vscode.CustomEditorProvider
 
             while (!isProfilerReady) {
                 await new Promise((resolve) => setTimeout(resolve, 100));
-                iframe.contentWindow.postMessage({ name: 'is-ready' }, profilerBaseUrl);
+                iframe.contentWindow.postMessage({ name: 'ready:request' }, profilerBaseUrl);
             }
 
-            const vscode = acquireVsCodeApi();
-            vscode.postMessage({ name: 'is-ready' });
+            vscode.postMessage({ name: 'profiler:ready' });
         })();
         </script>
     </body>
