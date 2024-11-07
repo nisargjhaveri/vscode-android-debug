@@ -180,7 +180,7 @@ export async function startLldbServer(device: Device, packageName: string, abi: 
 // Simpleperf
 export async function pushSimpleperf(deviceAdb: ADB): Promise<string> {
     const abi = (await getDeviceAbiListInternal(deviceAdb))?.[0];
-    const deviceArch = abi.startsWith("armeabi") ? "arm" : (abi === "arm64-v8a") ? "aarch64" : (abi === "x86") ? "i386" : "x86_64";
+    const deviceArch = abi.startsWith("armeabi") ? "arm" : (abi === "arm64-v8a") ? "arm64" : (abi === "x86") ? "x86" : "x86_64";
 
     const simpleperfLocalPath = path.normalize(`${androidPaths.requireNdkRoot()}/simpleperf/bin/android/${deviceArch}/simpleperf`);
 
