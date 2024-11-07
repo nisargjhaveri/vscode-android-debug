@@ -294,20 +294,22 @@ class FirefoxThread {
             const funcIndex = this.funcTable.findOrAddFunc(methodName, resourceIndex);
 
             const filePath = file.path ?? "";
-            const fileInAppData = filePath.startsWith("/data/app/");
+            // const fileInAppData = filePath.startsWith("/data/app/");
             const fileInSystem = filePath.startsWith("/apex/") || filePath.startsWith("/system/") || filePath.startsWith("/vendor/");
 
             let category: IndexIntoCategoryList = Categories.Other;
             if (filePath === "[kernel.kallsyms]" || filePath.endsWith(".ko")) {
                 category = Categories.Kernel;
-            } else if (fileInAppData) {
-                if (filePath.endsWith(".so")) {
-                    category = Categories.Native;
-                } else {
-                    category = Categories.Java;
-                }
-            } else if (fileInSystem) {
-                category = Categories.System;
+            } else if (filePath.endsWith(".so")) {
+                category = fileInSystem ? Categories.System : Categories.Native;
+            } else if (
+                filePath === "[JIT app cache]"
+                || filePath.endsWith(".vdex") || filePath.endsWith(".apk") || filePath.endsWith(".jar")
+                || filePath.endsWith(".oat") || filePath.endsWith(".odex")
+            ) {
+                const isJavaMethod = methodName.startsWith("java.") || methodName.startsWith("javax.") || methodName.startsWith("kotlin.") || methodName.startsWith("kotlinx.") || methodName.startsWith("dalvik.");
+                const isAndroidMethod = methodName.startsWith("android.") || methodName.startsWith("com.android.") || methodName.startsWith("androidx.") || methodName.startsWith("libcore.");
+                category = (fileInSystem || isAndroidMethod || isJavaMethod) ? Categories.System : Categories.Java;
             }
 
             const frameIndex = this.frameTable.findOrAddFrame(funcIndex, category);
