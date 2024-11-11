@@ -23,7 +23,7 @@ class Categories {
     private static categoryList: CategoryList = [];
 
     static readonly Other = this.createCategory("Other", "grey");
-    static readonly Native = this.createCategory("Native", "magenta");
+    static readonly Native = this.createCategory("Native", "lightblue");
     static readonly Java = this.createCategory("Java", "green");
     static readonly System = this.createCategory("System", "yellow");
     static readonly Kernel = this.createCategory("Kernel", "orange");
