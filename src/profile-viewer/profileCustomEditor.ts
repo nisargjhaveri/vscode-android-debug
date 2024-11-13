@@ -121,7 +121,7 @@ export class SimpleperfReportCustomEditor implements vscode.CustomEditorProvider
         }
 
         const address = server.address() as AddressInfo;
-        const url = `http://${address.address}:${address.port}`
+        const url = `http://${address.address}:${address.port}`;
 
         logger.info("Using profiler server:", url);
         return vscode.Uri.parse(url);
