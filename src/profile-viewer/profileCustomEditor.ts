@@ -1,7 +1,13 @@
 import * as vscode from 'vscode';
+
+import * as http from 'http';
+import type { AddressInfo } from 'net';
+import stoppable from 'stoppable';
+import handler from 'serve-handler';
+
 import { SimpleperfReportConverter } from '../profile-converter/converter';
 import { SerializableProfile } from '../profile-converter/firefox-profiler/profile';
-// import { logger } from './logger'
+import { logger } from '../logger';
 
 export class SimpleperfReportCustomDocument implements vscode.CustomDocument {
     constructor(public uri: vscode.Uri, private fileData: Uint8Array) {}
@@ -24,7 +30,15 @@ export class SimpleperfReportCustomEditor implements vscode.CustomEditorProvider
 
     private readonly magicHeader = "SIMPLEPERF";
 
+    private static profilerServer: http.Server & stoppable.WithStop;
+
     public static register(context: vscode.ExtensionContext): vscode.Disposable {
+        context.subscriptions.push({
+            dispose() {
+                SimpleperfReportCustomEditor.profilerServer?.stop();
+            }
+        });
+
         return vscode.window.registerCustomEditorProvider(
             SimpleperfReportCustomEditor.viewType,
             new SimpleperfReportCustomEditor(context),
@@ -82,12 +96,43 @@ export class SimpleperfReportCustomEditor implements vscode.CustomEditorProvider
         }
     }
 
+    async getProfilerUri(): Promise<vscode.Uri> {
+        SimpleperfReportCustomEditor.profilerServer ??= stoppable(http.createServer((req, res) => {
+            return handler(req, res, {
+                public: this.context.asAbsolutePath('firefox-profiler/dist'),
+                rewrites: [
+                    { source: '**', destination: '/index.html' },
+                ],
+                directoryListing: false,
+            });
+        }));
+
+        const server = SimpleperfReportCustomEditor.profilerServer;
+
+        if (!server.listening) {
+            logger.info("Starting profiler server");
+            await new Promise<void>((resolve, reject) => {
+                server.on('error', reject);
+
+                server.listen(0, '127.0.0.1', () => {
+                    resolve();
+                });
+            });
+        }
+
+        const address = server.address() as AddressInfo;
+        const url = `http://${address.address}:${address.port}`
+
+        logger.info("Using profiler server:", url);
+        return vscode.Uri.parse(url);
+    }
+
     async resolveCustomEditor(document: SimpleperfReportCustomDocument, webviewPanel: vscode.WebviewPanel, token: vscode.CancellationToken): Promise<void> {
         webviewPanel.webview.options = {
             enableScripts: true,
         };
 
-        const profilerBaseUrl = "https://deploy-preview-5170--perf-html.netlify.app";
+        const profilerBaseUrl = (await vscode.env.asExternalUri(await this.getProfilerUri())).toString();
         webviewPanel.webview.html = this.getWebviewContent(profilerBaseUrl);
 
         let processedProfilePromise: Promise<SerializableProfile>;
