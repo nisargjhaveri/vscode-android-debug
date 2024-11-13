@@ -1,0 +1,4 @@
+[submodule "firefox-profiler"]
+	path = firefox-profiler
+	url = https://github.com/nisargjhaveri/firefox-profiler
+	branch = vscode

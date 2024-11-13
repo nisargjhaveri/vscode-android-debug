@@ -618,12 +618,13 @@
         ]
     },
     "scripts": {
-        "vscode:prepublish": "npm run esbuild-base -- --minify",
+        "vscode:prepublish": "npm run esbuild-base -- --minify && npm run build-profiler",
         "typecheck": "tsc -noEmit",
         "protoc": "pbjs -t static-module -w commonjs -o ./src/profile-converter/simpleperf/simpleperf_report.js ./src/profile-converter/simpleperf/simpleperf_report.proto && pbts -o ./src/profile-converter/simpleperf/simpleperf_report.d.ts ./src/profile-converter/simpleperf/simpleperf_report.js",
         "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
         "build": "npm run esbuild-base -- --sourcemap",
         "watch": "npm run esbuild-base -- --sourcemap --watch",
+        "build-profiler": "cd firefox-profiler && yarn install && yarn run build-prod",
         "lint": "eslint src --ext ts",
         "pretest": "tsc -p ./ && npm run lint",
         "test": "node ./out/test/runTest.js"

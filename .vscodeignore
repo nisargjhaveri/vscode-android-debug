@@ -12,5 +12,12 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 
+# Bundle profiler
+firefox-profiler/**
+!firefox-profiler/dist/!(docs|photon)/**
+!firefox-profiler/dist/!(*.map)
+!firefox-profiler/README.md
+!firefox-profiler/LICENSE
+
 # Don't bundle examples
 examples/**
