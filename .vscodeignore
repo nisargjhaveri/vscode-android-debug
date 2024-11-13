@@ -4,7 +4,9 @@ out/test/**
 
 node_modules/**
 src/**
+.github/**
 .gitignore
+.gitmodules
 .yarnrc
 vsc-extension-quickstart.md
 **/tsconfig.json
