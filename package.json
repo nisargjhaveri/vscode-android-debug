@@ -613,7 +613,8 @@
                     {
                         "filenamePattern": "*.trace"
                     }
-                ]
+                ],
+                "priority": "option"
             }
         ]
     },
