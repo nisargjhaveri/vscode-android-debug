@@ -7,6 +7,7 @@ Debug Android apps in VS Code, with Native, Java or Dual debugging.
 # Features
 - Launch/Attach Android apps
 - Java, Native or Dual debugging.
+- Java and Native CPU profiling.
 - Specify one or more locations to search for your so files, or source paths for Java.
 - Dynamic support for specifying and selecting ABIs to support various fat and split apk configurations.
 - Select from connected devices or start an existing emulator for debugging.
@@ -63,7 +64,22 @@ For a simple Android app with both Java and Native code, the following config sh
             "java": {
                 "sourcePaths": ["${workspaceFolder}/app/src/main/java"]
             }
-        }
+        },
+
+        // Profile the app
+        {
+            "name": "Android Profile",
+            "type": "android-profile",
+            "request": "launch",
+            "target": "select",
+            // "pid": "${command:pickAndroidProcess}",  // Pid for the process to profile
+            "packageName": "com.example.sampleapplication", // Package name for your app.
+            "native": {
+                "symbolSearchPaths": [
+                    "${workspaceFolder}/app/build/intermediates/cmake/debug/obj/${command:abi}/",
+                ],
+            },
+        },
     ]
 }
 ```
