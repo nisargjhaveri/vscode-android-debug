@@ -1,7 +1,5 @@
 # android-debug · Android Debugging in VS Code
 
-> This is still work-in-progress. Please [find or create issues on GitHub](https://github.com/nisargjhaveri/vscode-android-debug/issues) if you find something is not working as expected.
-
 Debug Android apps in VS Code, with Native, Java or Dual debugging.
 
 # Features
@@ -163,7 +161,7 @@ Here are all the options supported with explanation and example values.
             "${workspaceFolder}/app/build/intermediates/cmake/debug/obj/${command:abi}/",
         ],
 
-        // All other options specified here are passes as is to the underlying Native debugger. See https://github.com/vadimcn/vscode-lldb/blob/master/MANUAL.md
+        // All other options specified here are passed as is to the underlying Native debugger. See https://github.com/vadimcn/vscode-lldb/blob/master/MANUAL.md
     },
 
     // Options for java debugging
@@ -171,7 +169,7 @@ Here are all the options supported with explanation and example values.
         // List of source paths for your java files.
         "sourcePaths": ["${workspaceFolder}/app/src/main/java"]
 
-        // All other options specified here are passes as is to the underlying Java debugger. See https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug
+        // All other options specified here are passed as is to the underlying Java debugger. See https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug
     }
 }
 ```
