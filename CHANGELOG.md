@@ -2,6 +2,11 @@
 
 All notable changes to the "android-debug" extension will be documented in this file.
 
+## v0.1.0
+- Add command to resume process waiting for debugger
+- Fix invalid emulators listed in target picker
+- Add experimental support for CPU profiling using simpleperf and Firefox Profiler as interface.
+
 ## v0.0.10
 - Minor fixes and upgrade to some dependencies.
 - Ignore SIGBUS in native debugging to better align with Android Studio.
