@@ -7,6 +7,8 @@ import { ADB, Device,  } from 'appium-adb';
 import * as teen_process from 'teen_process';
 import * as os from 'os';
 import * as path from 'path';
+import * as fs from 'fs';
+import * as fsPromises from 'fs/promises';
 
 import * as android from './android';
 import * as utils from './utils';
@@ -99,7 +101,14 @@ class ProfilerDebugAdapter extends debugadapter.LoggingDebugSession {
             const config = this.session.configuration;
             const symbolSearchPaths: string[] = config?.native?.symbolSearchPaths ?? [];
             for (const symbolSearchPath of symbolSearchPaths) {
-                simpleperfArgs.push("--symdir", symbolSearchPath);
+                const normalizedPath = path.normalize(symbolSearchPath);
+                try {
+                    await fsPromises.access(normalizedPath, fs.constants.R_OK);
+
+                    simpleperfArgs.push("--symdir", symbolSearchPath);
+                } catch (e) {
+                    logger.warn(`Ignoring symbol search path "${normalizedPath}": ${e}`);
+                }
             }
 
             logger.log(`Running simpleperf: ${simpleperfHostPath} ${simpleperfArgs.join(" ")}`);
