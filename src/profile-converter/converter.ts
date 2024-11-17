@@ -279,8 +279,10 @@ class FirefoxThread {
     enableCpuClock(cpuClockEventId: number): void {
         this.cpuClockEventId = cpuClockEventId;
 
-        this.sampleTable.weight = [];
-        this.sampleTable.weightType = "tracing-ms";
+        if (this.cpuClockEventId >= 0) {
+            this.sampleTable.weight = [];
+            this.sampleTable.weightType = "tracing-ms";
+        }
     }
 
     addSample(sample: report.ISample, fileMap: Map<number, report.IFile>): void {

@@ -56,7 +56,11 @@ class ProfilerDebugAdapter extends debugadapter.LoggingDebugSession {
     private async getSimpleperfCommand(deviceAdb: ADB, simpleperfDevicePath: string): Promise<string> {
         const supportedFeatures = await deviceAdb.shell(`${simpleperfDevicePath} list --show-features`);
 
-        const command = [simpleperfDevicePath, "record", "-o", this.simpleperfOutputDevicePath, "-e", "cpu-clock", "-f", "4000"];
+        const config = this.session.configuration;
+        const frequency = config.frequency ?? 4000;
+        const event = config.event ?? "cpu-clock";
+
+        const command = [simpleperfDevicePath, "record", "-o", this.simpleperfOutputDevicePath, "-f", frequency.toString(), "-e", event];
 
         command.push("--call-graph");
         if (supportedFeatures.indexOf("dwarf") >= 0) {
@@ -68,8 +72,6 @@ class ProfilerDebugAdapter extends debugadapter.LoggingDebugSession {
         if (supportedFeatures.indexOf("trace-offcpu") >= 0) {
             command.push("--trace-offcpu");
         }
-
-        const config = this.session.configuration;
 
         if (config.packageName) {
             command.push("--app", config.packageName);

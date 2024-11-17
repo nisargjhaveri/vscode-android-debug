@@ -536,6 +536,26 @@
                                     }
                                 ]
                             },
+                            "frequency": {
+                                "description": "Sampling frequency. Number of samples collected per second",
+                                "type": "number",
+                                "default": 4000
+                            },
+                            "event": {
+                                "description": "Event to record. See `simpleperf list` for available events",
+                                "anyOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "enum": [
+                                            "cpu-clock",
+                                            "task-clock"
+                                        ]
+                                    }
+                                ],
+                                "default": "cpu-clock"
+                            },
                             "native": {
                                 "description": "Configuration for native debugger.",
                                 "type": "object",
