@@ -2,6 +2,10 @@
 
 All notable changes to the "android-debug" extension will be documented in this file.
 
+## v0.1.1
+- Add options to specify events to sample and sampling frequency to profiler.
+- Ignore missing symbol search paths while symbolicating profiles
+
 ## v0.1.0
 - Add command to resume process waiting for debugger
 - Fix invalid emulators listed in target picker
