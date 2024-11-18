@@ -2,6 +2,10 @@
 
 All notable changes to the "android-debug" extension will be documented in this file.
 
+## v0.1.2
+- Handle case when simpleperf exists on its own before stopping profiler
+- Minor: Add sampled events in profile info
+
 ## v0.1.1
 - Add options to specify events to sample and sampling frequency to profiler.
 - Ignore missing symbol search paths while symbolicating profiles
