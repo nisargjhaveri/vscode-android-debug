@@ -192,22 +192,22 @@ class ProfilerDebugAdapter extends debugadapter.LoggingDebugSession {
     }
 
     protected async disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments, request?: DebugProtocol.Request | undefined): Promise<void> {
-        this.consoleLog(`Stopping profiler (pid: ${this.simpleperfPid})`);
+        this.consoleLog("Stopping profiler" + (this.simpleperfPid ? ` (pid: ${this.simpleperfPid})`: ""));
 
         try {
+            const config = this.session.configuration;
+            const deviceAdb = await android.getDeviceAdb(config.target);
+
             if (this.simpleperfPid) {
-                const config = this.session.configuration;
-
-                const deviceAdb = await android.getDeviceAdb(config.target);
                 deviceAdb.shell(['kill', this.simpleperfPid.toString()]);
-
-                await vscode.window.withProgress({location: vscode.ProgressLocation.Notification, title: "Android Profiler"}, async (progress, token) => {
-                    progress.report({message: "Waiting for simpleperf to exit"});
-                    await this.simpleperfProcess?.join();
-
-                    await this.processSimpleperfOutput(progress, deviceAdb);
-                });
             }
+
+            await vscode.window.withProgress({location: vscode.ProgressLocation.Notification, title: "Android Profiler"}, async (progress, token) => {
+                progress.report({message: "Waiting for simpleperf to exit"});
+                await this.simpleperfProcess?.join();
+
+                await this.processSimpleperfOutput(progress, deviceAdb);
+            });
         } catch (e) {
             logger.error(`Error stopping profiler: ${e}`);
             vscode.window.showErrorMessage(`Error stopping profiler: ${e}`);
