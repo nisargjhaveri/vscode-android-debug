@@ -59,6 +59,7 @@ class ProfilerDebugAdapter extends debugadapter.LoggingDebugSession {
         const config = this.session.configuration;
         const frequency = config.frequency ?? 4000;
         const event = config.event ?? "cpu-clock";
+		const recordAdditionalArgs = config.recordAdditionalArgs ?? "";
 
         const command = [simpleperfDevicePath, "record", "-o", this.simpleperfOutputDevicePath, "-f", frequency.toString(), "-e", event];
 
@@ -80,6 +81,10 @@ class ProfilerDebugAdapter extends debugadapter.LoggingDebugSession {
         if (config.pid) {
             command.push("-p", config.pid);
         }
+
+		if (recordAdditionalArgs) {
+			command.push(...recordAdditionalArgs.split(" "));
+		}
 
         return command.join(" ");
     }
