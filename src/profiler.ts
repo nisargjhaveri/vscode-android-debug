@@ -81,6 +81,14 @@ class ProfilerDebugAdapter extends debugadapter.LoggingDebugSession {
             command.push("-p", config.pid);
         }
 
+        if (config.recordAdditionalArgs) {
+            if (typeof config.recordAdditionalArgs === "string") {
+                config.recordAdditionalArgs = config.recordAdditionalArgs.split(" ");
+            }
+
+            command.push(...config.recordAdditionalArgs);
+        }
+
         return command.join(" ");
     }
 

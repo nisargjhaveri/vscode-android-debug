@@ -556,6 +556,13 @@
                                 ],
                                 "default": "cpu-clock"
                             },
+                            "recordAdditionalArgs": {
+                                "description": "Additional arguments to pass to `simpleperf record` command.",
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
                             "native": {
                                 "description": "Configuration for native debugger.",
                                 "type": "object",
