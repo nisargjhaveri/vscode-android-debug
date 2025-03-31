@@ -2,6 +2,10 @@
 
 All notable changes to the "android-debug" extension will be documented in this file.
 
+## v0.1.3
+- Add `recordAdditionalArgs` option to profiler configuration to allow passing additional arguments to `simpleperf record`.
+- Bump a few dependencies based on `npm audit`.
+
 ## v0.1.2
 - Handle case when simpleperf exists on its own before stopping profiler
 - Minor: Add sampled events in profile info
