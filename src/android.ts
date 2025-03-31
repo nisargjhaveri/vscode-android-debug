@@ -41,7 +41,7 @@ export async function getDeviceAdb(device: Device): Promise<ADB> {
 export async function getDeviceFromUDID(udid: string): Promise<VerboseDevice> {
     let adb = await getAdb();
 
-    let devices = await adb.getConnectedDevices({verbose: true});
+    let devices = await adb.getConnectedDevices({verbose: true}) as VerboseDevice[];
 
     let device = devices.filter((d) => {
         return d.udid === udid;
