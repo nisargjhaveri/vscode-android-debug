@@ -33,7 +33,7 @@
 
             "native": {
                 "symbolSearchPaths": [
-                    "${workspaceFolder}/app/build/intermediates/cmake/debug/obj/${command:abi}/",
+                    "${workspaceFolder}/app/build/intermediates/merged_native_libs/debug/mergeDebugNativeLibs/out/lib/${command:abi}/",
                 ],
             },
             "java": {
