@@ -66,12 +66,19 @@ export class LLDBDebugConfigurationProvider implements vscode.DebugConfiguration
         dbgConfig.androidLldbServerSocket = socket;
 
         dbgConfig.initCommands = (dbgConfig.initCommands instanceof Array) ? dbgConfig.initCommands : [];
-        // Improve Android debugging by ignoring SIGBUS and SIGSEGV signal, see https://issuetracker.google.com/issues/240007217#comment17
-        dbgConfig.initCommands.unshift(`process handle SIGBUS SIGSEGV --pass true --stop false --notify false`);
-        dbgConfig.initCommands.unshift(`platform connect unix-abstract-connect://[${target.udid}]${socket}`);
-        dbgConfig.initCommands.unshift(`platform select remote-android`);
 
-        dbgConfig.initCommands.push(`settings set plugin.jit-loader.gdb.enable off`);
+        dbgConfig.initCommands.unshift(
+            "platform select remote-android",
+            `platform connect unix-abstract-connect://[${target.udid}]${socket}`,
+            "settings set plugin.jit-loader.gdb.enable off",
+
+            // Ignoring SIGBUS and SIGSEGV signal, see https://issuetracker.google.com/issues/240007217#comment17
+            // Set breakpoints on unhandled signal handlers in libart.so to break on these signals instead
+            "process handle SIGBUS SIGSEGV --pass true --stop false --notify false",
+            "breakpoint set --shlib libart.so --name art_sigsegv_fault",
+            "breakpoint set --shlib libart.so --name art_sigbus_fault",
+        );
+
         if (dbgConfig.symbolSearchPaths) {
             for (let symbolSeachPath of dbgConfig.symbolSearchPaths) {
                 dbgConfig.initCommands.push(`settings append target.exec-search-paths '${symbolSeachPath}'`);
