@@ -2,6 +2,9 @@
 
 All notable changes to the "android-debug" extension will be documented in this file.
 
+## v0.1.4
+- Break on art_sigsegv_fault and art_sigbus_fault explicitly. Fix debugger detaching on crash without breaking. (#18)
+
 ## v0.1.3
 - Add `recordAdditionalArgs` option to profiler configuration to allow passing additional arguments to `simpleperf record`.
 - Bump a few dependencies based on `npm audit`.
