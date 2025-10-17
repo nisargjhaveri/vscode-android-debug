@@ -181,8 +181,8 @@ class DebugAdapter extends debugadapter.LoggingDebugSession {
             if (!config.packageName) {
                 throw new Error("A valid package name is required.");
             }
-            this.consoleLog(`Launching the app activity ${config.packageName}/${config.launchActivity}`);
-            await android.launchApp(target, config.packageName, config.launchActivity);
+            this.consoleLog(`Launching the app activity ${config.packageName}/${config.launchActivity} ${config.args.join(' ')}`);
+            await android.launchApp(target, config.packageName, config.launchActivity, config.args);
 
             this.consoleLog(`Getting pid for the launched app`);
 
