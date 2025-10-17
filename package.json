@@ -386,6 +386,13 @@
                                 "type": "string",
                                 "default": ".MainActivity"
                             },
+                            "args": {
+                                "description": "Command-line arguments to pass to the activity.",
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
                             "mode": {
                                 "description": "Debugger mode, `java`, `native` or `dual`",
                                 "enum": [

@@ -408,10 +408,15 @@ export async function installApp(device: Device, apkPath: string) {
     }
 }
 
-export async function launchApp(device: Device, packageName: string, launchActivity: string) {
+export async function launchApp(device: Device, packageName: string, launchActivity: string, args?: string[]) {
     let deviceAdb = await getDeviceAdb(device);
 
-    let launchCmd = `am start -D -a android.intent.action.MAIN -c android.intent.category.LAUNCHER ${packageName}/${launchActivity}`;
+    let launchCmdBase = `am start -D -n ${packageName}/${launchActivity} -a android.intent.action.MAIN -c android.intent.category.LAUNCHER`;
+
+    let launchCmd = launchCmdBase;
+    if (args && args.length) {
+        launchCmd = `${launchCmdBase} ${args.join(' ')}`;
+    }
 
     let {stdout, stderr} = await deviceAdb.shell(launchCmd, {outputFormat: deviceAdb.EXEC_OUTPUT_FORMAT.FULL} as ShellExecOptions) as any as {stdout: string, stderr: string};
 
