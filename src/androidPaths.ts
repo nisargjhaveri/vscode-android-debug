@@ -98,7 +98,7 @@ async function getNdkRoot(sdkRoot: string, customNdkRoot?: string): Promise<stri
         }
 
         try {
-            let files = (await fsPromises.readdir(root)).map((f) => path.join(root, f));
+            let files = (await fsPromises.readdir(root)).sort().reverse().map((f) => path.join(root, f));
             for (let file of files) {
                 if (await isValidNdkRoot(file)) {
                     return file;
