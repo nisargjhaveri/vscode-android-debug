@@ -150,9 +150,18 @@ class ProfilerDebugAdapter extends debugadapter.LoggingDebugSession {
         let target: Device = config.target;
 
         try {
-            this.consoleLog("Setup simpleperf on device");
             const deviceAdb = await android.getDeviceAdb(target);
-            const simpleperfDevicePath = await android.pushSimpleperf(deviceAdb);
+
+            // Use system simpleperf for API level 29 and above
+            let simpleperfDevicePath: string;
+            const apiLevel = await deviceAdb.getApiLevel();
+            if (apiLevel >= 29) {
+                simpleperfDevicePath = "/system/bin/simpleperf";
+            }
+            else {
+                this.consoleLog("Setup simpleperf on device");
+                simpleperfDevicePath = await android.pushSimpleperf(deviceAdb);
+            }
 
             const simpleperfCommand = await this.getSimpleperfCommand(deviceAdb, simpleperfDevicePath);
 
