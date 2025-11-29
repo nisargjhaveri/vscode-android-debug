@@ -2,6 +2,10 @@
 
 All notable changes to the "android-debug" extension will be documented in this file.
 
+## v0.1.5
+- Use system simpleperf for API level 29 and above
+- Reverse sort ndk versions when trying to automatically detect ndk root
+
 ## v0.1.4
 - Break on art_sigsegv_fault and art_sigbus_fault explicitly. Fix debugger detaching on crash without breaking. (#18)
 
